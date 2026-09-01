@@ -64,6 +64,24 @@ class Transaction(Base):
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
     status = Column(String, default="COMPLETED", nullable=False) # e.g. COMPLETED, FAILED
 
+class MandateUsage(Base):
+    __tablename__ = "mandate_usage"
+    
+    mandate_id = Column(String, ForeignKey("mandates.mandate_id"), primary_key=True)
+    daily_usage = Column(Integer, default=0, nullable=False) # in paise
+    weekly_usage = Column(Integer, default=0, nullable=False) # in paise
+    last_reset_date = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+
+class IdempotencyRecord(Base):
+    __tablename__ = "idempotency_records"
+    
+    idempotency_key = Column(String, primary_key=True, index=True)
+    agent_id = Column(String, ForeignKey("agents.agent_id"), nullable=False)
+    request_hash = Column(String, nullable=False)
+    status = Column(String, default="PENDING", nullable=False) # PENDING, COMPLETED, FAILED
+    response_payload = Column(String, nullable=True) # JSON string
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+
 # To initialize DB schemas
 def init_db():
     Base.metadata.create_all(bind=engine)
