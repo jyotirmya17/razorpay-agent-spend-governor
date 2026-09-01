@@ -70,7 +70,7 @@ def test_agent_unknown(db_session):
         category="cloud",
         amount=100
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     assert reason == "AGENT_UNKNOWN"
 
@@ -83,7 +83,7 @@ def test_agent_revoked(db_session):
         category="cloud",
         amount=100
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     assert reason == "AGENT_REVOKED"
 
@@ -101,7 +101,7 @@ def test_mandate_expired(db_session):
         category="cloud",
         amount=100
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     # Note: engine.py currently fetches the latest ACTIVE mandate. If none is active, it returns MANDATE_NOT_FOUND_OR_REVOKED.
     assert reason == "MANDATE_NOT_FOUND_OR_REVOKED"
@@ -115,7 +115,7 @@ def test_valid_request(db_session):
         category="cloud",
         amount=1000
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert allowed
     assert reason == "PASS"
     assert details["mandate_id"] == "man_1"
@@ -129,7 +129,7 @@ def test_amount_exceeds_txn_cap(db_session):
         category="cloud",
         amount=50001
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     assert reason == "AMOUNT_EXCEEDS_TXN_CAP"
 
@@ -142,7 +142,7 @@ def test_category_not_allowed(db_session):
         category="marketing",
         amount=1000
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     assert reason == "CATEGORY_NOT_ALLOWED"
 
@@ -155,22 +155,20 @@ def test_payee_not_allowed(db_session):
         category="cloud",
         amount=1000
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     assert reason == "PAYEE_NOT_ALLOWED"
 
 def test_daily_cap_exceeded(db_session):
     setup_test_data(db_session)
-    # Add a transaction that consumes the daily cap
-    t1 = Transaction(
-        txn_id="tx_1",
-        agent_id="agt_1",
-        payee_id="ven_1",
-        category="cloud",
-        amount=99000,
-        status="COMPLETED"
+    # Add usage that consumes the daily cap
+    from gateway.models.db import MandateUsage
+    mu = MandateUsage(
+        mandate_id="man_1",
+        daily_usage=99000,
+        weekly_usage=99000
     )
-    db_session.add(t1)
+    db_session.add(mu)
     db_session.commit()
     
     req = PayoutRequest(
@@ -180,6 +178,6 @@ def test_daily_cap_exceeded(db_session):
         category="cloud",
         amount=2000  # 99000 + 2000 = 101000 > 100000
     )
-    allowed, reason, details = check_policy(db_session, req)
+    allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert not allowed
     assert reason == "DAILY_CAP_EXCEEDED"
