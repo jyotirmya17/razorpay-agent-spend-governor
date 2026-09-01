@@ -6,14 +6,17 @@ from gateway.models.db import IdempotencyRecord
 from gateway.models.schemas import PayoutRequest
 from policy.engine import check_policy
 from policy.idempotency import hash_request
-from tests.unit.test_policy import TestingSessionLocal, setup_test_data
+from tests.unit.test_policy import TestingSessionLocal, setup_test_data, engine
+from gateway.models.db import Base
 
 @pytest.fixture
 def db_session():
+    Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     setup_test_data(session)
     yield session
     session.close()
+    Base.metadata.drop_all(bind=engine)
 
 def test_identical_payload_replay(db_session):
     # INVARIANT 1 & 2: Same idempotency key + same payload -> return cached response
