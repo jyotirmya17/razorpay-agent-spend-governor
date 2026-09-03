@@ -92,6 +92,14 @@ def test_concurrent_cap_enforcement(db_session_factory):
     session = db_session_factory()
     usage = session.query(MandateUsage).filter_by(mandate_id="man_1").first()
     
+    print(f"\n--- Concurrency Test Results ---")
+    print(f"Concurrency Level: {num_threads} concurrent threads")
+    print(f"Mandate Cap: 100000")
+    print(f"Successful Requests: {len(successful)}")
+    print(f"Rejected Requests: {len(failed)}")
+    print(f"Final Reserved/Committed Usage: {usage.daily_usage if usage else 0}")
+    print(f"Test Result: {'PASSED' if len(successful) <= 5 and (usage.daily_usage if usage else 0) <= 100000 else 'FAILED'}")
+    
     if usage:
         assert usage.daily_usage == len(successful) * amount_per_request
         assert usage.daily_usage <= 100000

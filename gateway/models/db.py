@@ -71,6 +71,9 @@ class Transaction(Base):
     
     # States: AUTHORIZED -> EXECUTING -> SUCCEEDED | FAILED | UNKNOWN -> RELEASED
     status = Column(String, default="AUTHORIZED", nullable=False)
+    
+    # Razorpay execution correlation
+    razorpay_payout_id = Column(String, index=True, nullable=True)
 
 class MandateUsage(Base):
     __tablename__ = "mandate_usage"
@@ -94,3 +97,11 @@ class IdempotencyRecord(Base):
 # To initialize DB schemas
 def init_db():
     Base.metadata.create_all(bind=engine)
+
+class WebhookEvent(Base):
+    __tablename__ = "webhook_events"
+    
+    event_id = Column(String, primary_key=True, index=True) # e.g. ev_...
+    event_type = Column(String, nullable=False)
+    payload = Column(String, nullable=False)
+    processed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)

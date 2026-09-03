@@ -4,11 +4,12 @@ import json
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgrespassword@localhost:5432/governor_test")
 
 if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 else:
     engine = create_engine(DATABASE_URL)
     
@@ -16,7 +17,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 from gateway.models.db import Base, Agent, Mandate, MandateUsage, Transaction, IdempotencyRecord
 from gateway.models.schemas import PayoutRequest
-from policy.engine import check_policy, execute_spend, reconcile_spend
+from policy.engine import check_policy
+from execution.service import ExecutionService
+from unittest.mock import patch
 from policy.idempotency import check_idempotency
 
 @pytest.fixture(scope="function")
@@ -69,7 +72,9 @@ def test_successful_execution(db_session):
     db_session.commit()
     
     # 2. Execute
-    execute_spend(db_session, req, req.idempotency_key)
+    service = ExecutionService()
+    with patch.object(service.client, 'execute_payout', return_value=("SUCCEEDED", {"id": "pout_123"})):
+        service.execute_spend(db_session, req, req.idempotency_key)
     
     # 3. Verify SUCCESS state
     txn = db_session.query(Transaction).filter_by(txn_id=req.idempotency_key).first()
@@ -97,7 +102,9 @@ def test_explicit_failure_execution(db_session):
     assert usage_before == 999
     
     # 2. Execute (simulating explicit failure)
-    execute_spend(db_session, req, req.idempotency_key)
+    service = ExecutionService()
+    with patch.object(service.client, 'execute_payout', return_value=("FAILED", {"error": "bad request"})):
+        service.execute_spend(db_session, req, req.idempotency_key)
     
     # 3. Verify FAILED state and usage rollback
     txn = db_session.query(Transaction).filter_by(txn_id=req.idempotency_key).first()
@@ -121,7 +128,9 @@ def test_timeout_and_reconciliation(db_session):
     db_session.commit()
     
     # 2. Execute (simulating timeout)
-    execute_spend(db_session, req, req.idempotency_key)
+    service = ExecutionService()
+    with patch.object(service.client, 'execute_payout', return_value=("UNKNOWN", {"error": "timeout"})):
+        service.execute_spend(db_session, req, req.idempotency_key)
     
     # 3. Verify UNKNOWN state
     txn = db_session.query(Transaction).filter_by(txn_id=req.idempotency_key).first()
@@ -131,7 +140,7 @@ def test_timeout_and_reconciliation(db_session):
     assert usage_after == 888  # Usage NOT rolled back for UNKNOWN
     
     # 4. Reconcile as FAILED
-    reconcile_spend(db_session, req.idempotency_key, "FAILED", req.agent_id, req.amount)
+    service.reconcile_spend(db_session, req.idempotency_key, "FAILED", req.agent_id, req.amount)
     
     # 5. Verify FAILED state and usage rollback
     txn_recon = db_session.query(Transaction).filter_by(txn_id=req.idempotency_key).first()
