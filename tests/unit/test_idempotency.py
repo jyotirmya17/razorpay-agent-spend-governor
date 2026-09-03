@@ -22,6 +22,7 @@ def test_identical_payload_replay(db_session):
     # INVARIANT 1 & 2: Same idempotency key + same payload -> return cached response
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="idemp_123",
         payee_id="ven_1",
         category="cloud",
@@ -52,6 +53,7 @@ def test_different_payload_conflict(db_session):
     # INVARIANT 3: Same idempotency key + different payload -> conflict
     original_req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="idemp_123",
         payee_id="ven_1",
         category="cloud",
@@ -73,10 +75,11 @@ def test_different_payload_conflict(db_session):
     # Now send a different payload (e.g. amount changed to 1000)
     different_req = PayoutRequest(
         agent_id="agt_1",
-        idempotency_key="idemp_123", # same key
+        request_id="req_1",
+        idempotency_key="idemp_123",
         payee_id="ven_1",
         category="cloud",
-        amount=1000 # different amount
+        amount=1000  # Different amount
     )
     
     allowed, reason, details = check_policy(db_session, different_req, different_req.idempotency_key)
@@ -88,6 +91,7 @@ def test_pending_request_wait_or_conflict(db_session):
     # INVARIANT 1: A valid idempotency key maps to exactly one logical payout operation.
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="idemp_123",
         payee_id="ven_1",
         category="cloud",
@@ -107,4 +111,4 @@ def test_pending_request_wait_or_conflict(db_session):
     allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     
     assert allowed is False
-    assert reason == "IDEMPOTENCY_KEY_CONFLICT"
+    assert reason == "UNKNOWN_IN_PROGRESS"

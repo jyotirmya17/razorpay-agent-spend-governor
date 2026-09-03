@@ -7,9 +7,15 @@ from gateway.models.db import Base, Agent, Mandate, Transaction
 from gateway.models.schemas import PayoutRequest
 from policy.engine import check_policy
 
-# Use in-memory SQLite for tests
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+import os
+# Use PostgreSQL as primary for tests
+SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgrespassword@localhost:5432/governor_test")
+
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function")
@@ -65,6 +71,7 @@ def setup_test_data(db):
 def test_agent_unknown(db_session):
     req = PayoutRequest(
         agent_id="agt_missing",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="cloud",
@@ -78,6 +85,7 @@ def test_agent_revoked(db_session):
     setup_test_data(db_session)
     req = PayoutRequest(
         agent_id="agt_revoked",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="cloud",
@@ -96,6 +104,7 @@ def test_mandate_expired(db_session):
     
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="cloud",
@@ -110,6 +119,7 @@ def test_valid_request(db_session):
     setup_test_data(db_session)
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="cloud",
@@ -117,13 +127,14 @@ def test_valid_request(db_session):
     )
     allowed, reason, details = check_policy(db_session, req, req.idempotency_key)
     assert allowed
-    assert reason == "PASS"
+    assert reason == "AUTHORIZED"
     assert details["mandate_id"] == "man_1"
 
 def test_amount_exceeds_txn_cap(db_session):
     setup_test_data(db_session)
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="cloud",
@@ -137,6 +148,7 @@ def test_category_not_allowed(db_session):
     setup_test_data(db_session)
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="marketing",
@@ -150,6 +162,7 @@ def test_payee_not_allowed(db_session):
     setup_test_data(db_session)
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_3",
         category="cloud",
@@ -173,6 +186,7 @@ def test_daily_cap_exceeded(db_session):
     
     req = PayoutRequest(
         agent_id="agt_1",
+        request_id="req_1",
         idempotency_key="id_1",
         payee_id="ven_1",
         category="cloud",

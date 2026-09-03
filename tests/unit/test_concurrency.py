@@ -11,9 +11,15 @@ from gateway.models.schemas import PayoutRequest
 from policy.engine import check_policy
 from tests.unit.test_policy import setup_test_data
 
-# Use file-based sqlite for concurrency test to avoid some in-memory DB sharing issues
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_concurrency.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False, "timeout": 15})
+import os
+# Use Postgres for concurrency test
+SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgrespassword@localhost:5432/governor_test")
+
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False, "timeout": 15})
+else:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture
@@ -46,6 +52,7 @@ def test_concurrent_cap_enforcement(db_session_factory):
         session = db_session_factory()
         req = PayoutRequest(
             agent_id="agt_1",
+            request_id=f"req_concurrent_{i}",
             idempotency_key=f"idemp_concurrent_{i}",
             payee_id="ven_1",
             category="cloud",
