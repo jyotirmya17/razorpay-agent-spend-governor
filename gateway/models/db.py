@@ -3,11 +3,17 @@ from sqlalchemy import create_engine, Column, String, Integer, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime, timezone
 
-# Optional fallback to SQLite for local zero-setup dev
-# For prod/eval, this would be a postgres:// URL
-DATABASE_URL = "sqlite:///./governor.db"
+import os
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Use PostgreSQL as primary for production/concurrency
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgrespassword@localhost:5432/governor_test")
+
+# If it's still sqlite (e.g. for simple local test), keep check_same_thread
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
+    
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -62,7 +68,9 @@ class Transaction(Base):
     category = Column(String, nullable=False)
     amount = Column(Integer, nullable=False) # in paise
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
-    status = Column(String, default="COMPLETED", nullable=False) # e.g. COMPLETED, FAILED
+    
+    # States: AUTHORIZED -> EXECUTING -> SUCCEEDED | FAILED | UNKNOWN -> RELEASED
+    status = Column(String, default="AUTHORIZED", nullable=False)
 
 class MandateUsage(Base):
     __tablename__ = "mandate_usage"
@@ -78,9 +86,10 @@ class IdempotencyRecord(Base):
     idempotency_key = Column(String, primary_key=True, index=True)
     agent_id = Column(String, ForeignKey("agents.agent_id"), nullable=False)
     request_hash = Column(String, nullable=False)
-    status = Column(String, default="PENDING", nullable=False) # PENDING, COMPLETED, FAILED
+    status = Column(String, default="PENDING", nullable=False) # PENDING, COMPLETED, FAILED, UNKNOWN
     response_payload = Column(String, nullable=True) # JSON string
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
 
 # To initialize DB schemas
 def init_db():

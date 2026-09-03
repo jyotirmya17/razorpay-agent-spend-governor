@@ -9,9 +9,10 @@ class DecisionEnum(str, Enum):
     FLAG_FOR_REVIEW = "FLAG_FOR_REVIEW"
 
 class PayoutRequest(BaseModel):
-    agent_id: str = Field(..., description="Unique identifier of the agent requesting the payout")
-    idempotency_key: str = Field(..., description="Unique key to prevent duplicate processing")
-    payee_id: str = Field(..., description="Target vendor or payee identifier")
+    agent_id: str = Field(..., description="ID of the agent initiating the payout")
+    request_id: str = Field(..., description="Unique identifier for the HTTP request (used for tracing and logging)")
+    idempotency_key: str = Field(..., description="Unique key guaranteeing exactly-once financial execution")
+    payee_id: str = Field(..., description="ID of the payee/vendor")
     category: str = Field(..., description="Category of the spend (e.g., software_subscription)")
     amount: int = Field(..., gt=0, description="Amount in the lowest denomination (e.g., paise for INR)")
     currency: str = Field(default="INR", description="Currency code")

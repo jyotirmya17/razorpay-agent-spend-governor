@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from gateway.models.db import Agent, Mandate, Transaction, MandateUsage
+from gateway.models.db import Agent, Mandate, Transaction, MandateUsage, IdempotencyRecord
 from gateway.models.schemas import PayoutRequest
 from policy.idempotency import check_idempotency, create_idempotency_record
 
@@ -16,11 +16,13 @@ def check_policy(db: Session, request: PayoutRequest, idempotency_key: str) -> T
     """
     
     # 0. Idempotency Check
-    is_conflict, is_cached, cached_response = check_idempotency(db, request.agent_id, idempotency_key, request)
+    is_conflict, is_cached, cached_response, idemp_status = check_idempotency(db, request.agent_id, idempotency_key, request)
     if is_conflict:
         return False, "IDEMPOTENCY_KEY_CONFLICT", {}
     if is_cached:
         return True, "IDEMPOTENT_REPLAY", cached_response
+    if idemp_status == "UNKNOWN_IN_PROGRESS":
+        return False, "UNKNOWN_IN_PROGRESS", {}
 
     # 1. Agent exists and is active
     agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
@@ -88,12 +90,120 @@ def check_policy(db: Session, request: PayoutRequest, idempotency_key: str) -> T
     usage.daily_usage += request.amount
     usage.weekly_usage += request.amount
     
-    # 10. Record idempotency pending
-    create_idempotency_record(db, request.agent_id, idempotency_key, request)
+    # 10. Record idempotency pending (or update if stale)
+    if idemp_status == "STALE_PENDING":
+        record = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).first()
+        record.status = "PENDING"
+        record.created_at = now
+        record.updated_at = now
+        db.flush()
+    else:
+        create_idempotency_record(db, request.agent_id, idempotency_key, request)
+        
+    # 11. Create Transaction as AUTHORIZED
+    txn = Transaction(
+        txn_id=idempotency_key, # Using idempotency key as txn_id for 1:1 mapping
+        agent_id=request.agent_id,
+        payee_id=request.payee_id,
+        category=request.category,
+        amount=request.amount,
+        status="AUTHORIZED"
+    )
+    db.add(txn)
+    db.flush()
         
     mandate_details = {
         "mandate_id": mandate.mandate_id,
         "version": mandate.version,
     }
         
-    return True, "PASS", mandate_details
+    return True, "AUTHORIZED", mandate_details
+
+def execute_spend(db: Session, request: PayoutRequest, idempotency_key: str):
+    """
+    Simulates external execution to RazorpayX.
+    We don't hold DB locks here.
+    """
+    # Look up the transaction
+    txn = db.query(Transaction).filter_by(txn_id=idempotency_key).first()
+    if not txn or txn.status != "AUTHORIZED":
+        return
+        
+    txn.status = "EXECUTING"
+    db.commit() # Release DB locks, enter executing state
+    
+    try:
+        # SIMULATE EXTERNAL HTTP CALL TO RAZORPAYX
+        import random, time
+        time.sleep(0.1)
+        
+        # We will simulate a deterministic response based on the amount for testing
+        if request.amount == 999: # simulate explicit failure
+            raise ValueError("Explicit RazorpayX Failure")
+        if request.amount == 888: # simulate timeout
+            raise TimeoutError("Network Timeout")
+            
+        # Success
+        txn.status = "SUCCEEDED"
+        
+        idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).first()
+        idemp.status = "COMPLETED"
+        import json
+        idemp.response_payload = json.dumps({"status": "SUCCEEDED", "txn_id": idempotency_key})
+        
+        db.commit()
+        
+    except ValueError as e:
+        # Explicit failure
+        txn.status = "FAILED"
+        idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).first()
+        idemp.status = "FAILED"
+        
+        # Release reservation
+        mandate = db.query(Mandate).filter_by(agent_id=request.agent_id, status="ACTIVE").order_by(Mandate.version.desc()).first()
+        if mandate:
+            usage = db.query(MandateUsage).filter_by(mandate_id=mandate.mandate_id).with_for_update().first()
+            if usage:
+                usage.daily_usage -= request.amount
+                usage.weekly_usage -= request.amount
+                
+        db.commit()
+        
+    except Exception as e:
+        # Timeout / Crash / Network loss
+        txn.status = "UNKNOWN"
+        idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).first()
+        idemp.status = "UNKNOWN"
+        db.commit()
+
+def reconcile_spend(db: Session, idempotency_key: str, external_status: str, agent_id: str, amount: int):
+    """
+    Reconciles an UNKNOWN transaction based on the actual external status.
+    """
+    txn = db.query(Transaction).filter_by(txn_id=idempotency_key).with_for_update().first()
+    idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).with_for_update().first()
+    
+    if not txn or txn.status != "UNKNOWN":
+        return # nothing to reconcile
+        
+    if external_status == "SUCCEEDED":
+        txn.status = "SUCCEEDED"
+        if idemp:
+            idemp.status = "COMPLETED"
+            import json
+            idemp.response_payload = json.dumps({"status": "SUCCEEDED", "txn_id": idempotency_key})
+            
+    elif external_status == "FAILED":
+        txn.status = "FAILED"
+        if idemp:
+            idemp.status = "FAILED"
+            
+        # Release reservation
+        mandate = db.query(Mandate).filter_by(agent_id=agent_id, status="ACTIVE").order_by(Mandate.version.desc()).first()
+        if mandate:
+            usage = db.query(MandateUsage).filter_by(mandate_id=mandate.mandate_id).first()
+            if usage:
+                usage.daily_usage -= amount
+                usage.weekly_usage -= amount
+                
+    db.commit()
