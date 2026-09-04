@@ -130,8 +130,28 @@ def generate_dataset(
             agent_txns_count = max(1, int(round((profile.txns_per_week / total_weight) * num_transactions)))
             
         agent_txns = []
+        burst_txns_remaining = 0
+        burst_base_ts = None
         
         for _ in range(agent_txns_count):
+            if burst_txns_remaining > 0:
+                burst_txns_remaining -= 1
+                burst_base_ts += timedelta(minutes=random.randint(1, 15))
+                
+                agent_txns.append(TransactionRecord(
+                    transaction_id=f"txn_{random.getrandbits(64):016x}",
+                    agent_id=profile.agent_id,
+                    timestamp=burst_base_ts,
+                    amount_paise=int(random.randint(profile.min_amount, profile.max_amount)),
+                    currency="INR",
+                    payee_id=random.choice(profile.preferred_payees),
+                    category=random.choice(profile.preferred_categories),
+                    status="SUCCEEDED",
+                    is_anomaly=False,
+                    anomaly_type="LEGITIMATE_TEMPORARY_SPIKE"
+                ))
+                continue
+                
             days_offset = random.randint(0, 364)
             txn_date = start_date + timedelta(days=days_offset)
             
@@ -204,6 +224,10 @@ def generate_dataset(
                 is_anomaly=is_anomaly,
                 anomaly_type=anomaly_type
             ))
+            
+            if anomaly_type == "LEGITIMATE_TEMPORARY_SPIKE":
+                burst_txns_remaining = random.randint(2, 3)
+                burst_base_ts = final_timestamp
             
         transactions.extend(agent_txns)
         
