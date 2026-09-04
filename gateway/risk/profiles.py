@@ -1,6 +1,7 @@
 import math
 from typing import Dict, List, Tuple
-from collections import defaultdict
+from collections import defaultdict, deque
+from datetime import timedelta
 from gateway.risk.data_generator import TransactionRecord
 import random
 
@@ -30,6 +31,9 @@ class AgentBehaviorProfile:
         self.last_txn_date = None
         self.current_day_spend = 0.0
         self.current_week_spend = 0.0
+        
+        # Memory for velocity calculation
+        self.recent_timestamps: deque = deque()
 
     @property
     def typical_amount_mean(self) -> float:
@@ -90,6 +94,12 @@ def update_profile(profile: AgentBehaviorProfile, txn: TransactionRecord):
         profile.current_day_spend += amount
         profile.current_week_spend += amount
         profile.last_txn_date = txn_date
+        
+    # Maintain rolling 24-hour window for velocity
+    profile.recent_timestamps.append(txn["timestamp"])
+    cutoff = txn["timestamp"] - timedelta(hours=24)
+    while profile.recent_timestamps and profile.recent_timestamps[0] < cutoff:
+        profile.recent_timestamps.popleft()
 
 def temporal_split(
     transactions: List[TransactionRecord], 
