@@ -62,7 +62,8 @@ class RazorpayXClient:
                         time.sleep(2 ** attempt) # Exponential backoff: 1s, 2s
                         continue
                     else:
-                        return "RATE_LIMITED", response.json()
+                        # Retries exhausted. Indeterminate external outcome.
+                        return "UNKNOWN", response.json()
                 elif 400 <= response.status_code < 500:
                     # 400, 401, 403, 404, 409, 422
                     return "FAILED", response.json()

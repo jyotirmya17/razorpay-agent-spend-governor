@@ -45,12 +45,8 @@ class ExecutionService:
             idemp.response_payload = json.dumps({"status": "SUCCEEDED", "txn_id": idempotency_key, "razorpay_payout_id": payout_id})
             db.commit()
             
-        elif status == "FAILED" or status == "RATE_LIMITED":
-            # For 429 we might want to schedule a retry in a background worker, but for synchronous return we mark it FAILED and release.
-            # Actually, the user says: "429 -> bounded exponential retry".
-            # For simplicity in this synchronous function, if the adapter couldn't retry inside, we fail it here,
-            # or maybe the adapter itself should have retried? 
-            # I will just mark it FAILED and release the reservation, so the agent can retry.
+        elif status == "FAILED":
+            # Failed natively.
             txn.status = "FAILED"
             txn.razorpay_payout_id = payout_id
             idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).first()
@@ -80,7 +76,7 @@ class ExecutionService:
         txn = db.query(Transaction).filter_by(txn_id=idempotency_key).with_for_update().first()
         idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=idempotency_key).with_for_update().first()
         
-        if not txn or txn.status != "UNKNOWN":
+        if not txn or txn.status in ["SUCCEEDED", "FAILED"]:
             return # nothing to reconcile
             
         if payout_id:

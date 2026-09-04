@@ -90,7 +90,7 @@ async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
         if not txn and reference_id:
             txn = db.query(Transaction).filter_by(txn_id=reference_id).first()
             
-        if txn and txn.status == "UNKNOWN":
+        if txn and txn.status not in ["SUCCEEDED", "FAILED"]:
             external_status = "SUCCEEDED" if event_type == "payout.processed" else "FAILED"
             service = ExecutionService()
             service.reconcile_spend(
