@@ -29,7 +29,7 @@ class RazorpayXClient:
         # In a real system, you might branch on payee_id format to decide fund_account_id vs contact_id.
         # Here we map payee_id directly to fund_account_id for simplicity, as defined in Razorpay API.
         payload = {
-            "account_number": "7878780080316316", # Default test account from Razorpay docs
+            "account_number": self.config.account_number,
             "fund_account_id": payee_id,
             "amount": amount, # Razorpay expects amount in paise (100 paise = 1 INR)
             "currency": currency,

@@ -9,6 +9,7 @@ class RazorpayConfig(BaseModel):
     key_id: str = Field(...)
     key_secret: str = Field(...)
     webhook_secret: str = Field(...)
+    account_number: str = Field(...)
 
     @field_validator("mode")
     @classmethod
@@ -24,6 +25,13 @@ class RazorpayConfig(BaseModel):
             raise ValueError("RAZORPAY_KEY_ID must start with 'rzp_test_'. Live keys are prohibited.")
         return v
 
+    @field_validator("account_number")
+    @classmethod
+    def validate_account_number(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("RAZORPAY_ACCOUNT_NUMBER must be set.")
+        return v
+
 def load_config() -> RazorpayConfig:
     """Load and strictly validate Razorpay configuration."""
     # If environment variables are missing (like in test environments), we will raise ValidationError
@@ -31,7 +39,8 @@ def load_config() -> RazorpayConfig:
         mode=os.environ.get("RAZORPAY_MODE", "test"),
         key_id=os.environ.get("RAZORPAY_KEY_ID", "rzp_test_dummy"),
         key_secret=os.environ.get("RAZORPAY_KEY_SECRET", "dummy_secret"),
-        webhook_secret=os.environ.get("RAZORPAY_WEBHOOK_SECRET", "dummy_webhook_secret")
+        webhook_secret=os.environ.get("RAZORPAY_WEBHOOK_SECRET", "dummy_webhook_secret"),
+        account_number=os.environ.get("RAZORPAY_ACCOUNT_NUMBER")
     )
 
 def get_config() -> RazorpayConfig:

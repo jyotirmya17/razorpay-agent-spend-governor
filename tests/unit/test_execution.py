@@ -24,6 +24,7 @@ from policy.idempotency import check_idempotency
 
 @pytest.fixture(scope="function")
 def db_session():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     

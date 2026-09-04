@@ -9,8 +9,9 @@ from policy.idempotency import hash_request
 from tests.unit.test_policy import TestingSessionLocal, setup_test_data, engine
 from gateway.models.db import Base
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db_session():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     setup_test_data(session)
