@@ -99,3 +99,33 @@ def append_audit_event(db: Session, event_type: str, entity_id: str, payload: di
     db.add(event)
     db.flush()  # assigns sequence_id inside the current transaction
     return event
+
+
+def verify_audit_chain(db: Session):
+    """Verifies the SHA-256 tamper-evident audit chain for a DB session."""
+    events = db.query(AuditEvent).order_by(AuditEvent.sequence_id.asc()).all()
+    if not events:
+        return True, "Audit chain valid (empty chain)"
+
+    expected_previous = GENESIS_HASH
+    for event in events:
+        if event.previous_event_hash != expected_previous:
+            return False, f"Linkage mismatch at sequence {event.sequence_id}"
+
+        try:
+            parsed = json.loads(event.payload) if isinstance(event.payload, str) else event.payload
+            canon = json.dumps(parsed, sort_keys=True, separators=(",", ":"))
+        except Exception:
+            canon = str(event.payload)
+
+        hasher = hashlib.sha256()
+        hasher.update(event.previous_event_hash.encode("utf-8"))
+        hasher.update(canon.encode("utf-8"))
+        expected_hash = hasher.hexdigest()
+
+        if event.event_hash != expected_hash:
+            return False, f"Hash mismatch at sequence {event.sequence_id}"
+
+        expected_previous = event.event_hash
+
+    return True, f"Audit chain valid ({len(events)} events verified)"
