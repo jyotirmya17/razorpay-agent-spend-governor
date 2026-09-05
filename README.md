@@ -203,12 +203,35 @@ Features are extracted strictly point-in-time: `build_live_profile` queries tran
 During Phase 4.6 evaluation across 10,000 synthetic transactions:
 - **Evaluation Finding**: The evaluation showed strong detection of some behavioral shifts, particularly amount deviations and broader behavior changes, but weak recall for several subtle anomaly classes such as burst activity, spend spikes, and odd-hour behavior.
 - **Measured False Positive Rates (FPR)**:
-  - **Known-Agent FPR**: `9.01%`
-  - **Unseen-Agent FPR**: `21.94%`
-  - **Hard Negative (`LEGITIMATE_LARGE_INVOICE`) FPR**: `79.17%`
+  - **Known-Agent FPR**: `8.59%`
+  - **Unseen-Agent FPR**: `28.83%`
+  - **Hard Negative (`LEGITIMATE_LARGE_INVOICE`) FPR**: `78.95%`
 
 **Fintech Architectural Decision**:
 Because rejecting a legitimate quarterly vendor payment causes severe business disruption, **behavioral model auto-blocking was intentionally DISABLED**. High anomaly scores ($\ge 0.42$) generate a `FLAG` status for review rather than a hard `BLOCK`. Deterministic policy violations remain the sole hard `BLOCK` authority.
+
+### Rules vs. ML: An Honest Comparison
+
+During Phase 4.6 evaluation across 10,000 synthetic transactions:
+- **No Governance Baseline**: Total Expected Cost = `9800`
+- **Simple Rules Baseline**: Total Expected Cost = `6890` | F1 = `0.338`
+- **ML Layer (`IsolationForest` @ 0.42)**: Total Expected Cost = `7950` | F1 = `0.214`
+
+#### 1. Aggregate Performance
+On this synthetic benchmark, the simple rules baseline currently outperforms the `IsolationForest` model on aggregate expected cost (`6890` vs. `7950`) and F1 score (`0.338` vs. `0.214`). The ML model's current aggregate performance does **not** outperform the simple rules baseline on this synthetic benchmark.
+
+#### 2. Demonstrated Value of the ML Layer
+While aggregate benchmark performance favors simple rules, the structural capability of the ML layer provides complementary protection across multi-signal behavioral patterns:
+- **Multi-Signal Adversarial Scenarios**: In Part B adversarial evaluations, the `IsolationForest` flagged all 5 tested multi-signal attack scenarios (scores $\ge 0.42$):
+  - *Payee + Amount Evasion*: Anomaly Score = `0.662` (FLAG)
+  - *Amount + Time Evasion*: Anomaly Score = `0.526` (FLAG)
+  - *Category + Payee Evasion*: Anomaly Score = `0.527` (FLAG)
+  - *Velocity Attack*: Anomaly Score = `0.617` (FLAG)
+  - *Multi-Signal Attack*: Anomaly Score = `0.556` (FLAG)
+- **Feature Space Evaluation**: The tested adversarial scenarios combine multiple behavioral signals. The current simple-rule baseline expresses a small set of single-feature conditions, while the ML layer evaluates the combined behavioral feature space.
+
+#### 3. Required Conclusion
+On this synthetic benchmark, the simple rules baseline currently outperforms the IsolationForest model on aggregate cost and F1. We therefore do not claim that ML is universally superior. The demonstrated value of the ML layer is complementary: it evaluates a broader behavioral feature space and can surface combinations of behavioral signals that are not explicitly enumerated by the current fixed-rule baseline.
 
 ---
 

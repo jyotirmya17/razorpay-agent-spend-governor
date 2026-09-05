@@ -333,6 +333,8 @@ def main():
         f.write(f"- No Governance: Cost = {baseline_a_metrics.expected_cost:.0f}\n")
         f.write(f"- Simple Rules: Cost = {baseline_b_metrics.expected_cost:.0f} (F1 = {baseline_b_metrics.f1:.3f})\n")
         f.write(f"- ML (IsolationForest @0.42): Cost = {test_metrics.expected_cost:.0f} (F1 = {test_metrics.f1:.3f})\n")
+        f.write("\n### Honest Reframe & Comparison Finding\n")
+        f.write("On this synthetic benchmark, the simple rules baseline currently outperforms the IsolationForest model on aggregate cost and F1. We therefore do not claim that ML is universally superior. The demonstrated value of the ML layer is complementary: it evaluates a broader behavioral feature space and can surface combinations of behavioral signals that are not explicitly enumerated by the current fixed-rule baseline.\n")
         
         f.write("\n## Part H: Feature Ablation (F1 Drop)\n")
         for k, v in ablation_results.items():
@@ -343,7 +345,7 @@ def main():
         f.write("2. **Should 0.42 remain?** Yes, frozen test set confirms validation threshold.\n")
         f.write("3. **Behavioral blocking disabled?** Yes, FPR is too high for blocking.\n")
         f.write("4. **Cold start handling required?** No immediate change to code; unseen FPR drops as history builds.\n")
-        f.write("5. **Model/Feature changes justified?** None. Simple rules still outperform IF slightly, reinforcing the need to run in shadow mode (FLAG only).\n")
+        f.write("5. **Model/Feature changes justified?** None. Simple rules still outperform IF on aggregate cost/F1, reinforcing the necessity to operate the ML layer in shadow/FLAG mode.\n")
 
     print("Analysis complete. Report generated at docs/phase4_6_adversarial_validation.md")
 

@@ -74,6 +74,9 @@
 - Simple Rules: Cost = 6890 (F1 = 0.338)
 - ML (IsolationForest @0.42): Cost = 7950 (F1 = 0.214)
 
+### Honest Reframe & Comparison Finding
+On this synthetic benchmark, the simple rules baseline currently outperforms the IsolationForest model on aggregate cost and F1. We therefore do not claim that ML is universally superior. The demonstrated value of the ML layer is complementary: it evaluates a broader behavioral feature space and can surface combinations of behavioral signals that are not explicitly enumerated by the current fixed-rule baseline.
+
 ## Part H: Feature Ablation (F1 Drop)
 - Dropping Amount: F1 = 0.201
 - Dropping Payee: F1 = 0.195
@@ -88,4 +91,4 @@
 2. **Should 0.42 remain?** Yes, frozen test set confirms validation threshold.
 3. **Behavioral blocking disabled?** Yes, FPR is too high for blocking.
 4. **Cold start handling required?** No immediate change to code; unseen FPR drops as history builds.
-5. **Model/Feature changes justified?** None. Simple rules still outperform IF slightly, reinforcing the need to run in shadow mode (FLAG only).
+5. **Model/Feature changes justified?** None. Simple rules still outperform IF on aggregate cost/F1, reinforcing the necessity to operate the ML layer in shadow/FLAG mode.

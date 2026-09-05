@@ -140,11 +140,9 @@ Reason codes from behavioral and provenance evaluation are **always aggregated**
 
 ---
 
-## Phase 4.6 Known Limitations
-
-- IsolationForest **does not outperform** the Simple Rules baseline on expected cost
-- Known-agent FPR ≈ 9%; Unseen-agent FPR ≈ 22%
-- Hard-negative FPRs: `LEGITIMATE_LARGE_INVOICE` ≈ 79%, `LEGITIMATE_NEW_VENDOR` ≈ 50%
+- IsolationForest **does not outperform** the Simple Rules baseline on expected cost (`7950` vs. `6890`) or F1 score (`0.214` vs. `0.338`)
+- Known-agent FPR = `8.59%`; Unseen-agent FPR = `28.83%`
+- Hard-negative FPRs: `LEGITIMATE_LARGE_INVOICE` = `78.95%`, `LEGITIMATE_NEW_VENDOR` = `60.00%`
 - **Behavioral blocking is DISABLED** due to high legitimate-activity FPR
 - Behavioral ML is used as a FLAG/REVIEW signal only
 - Evaluation is on a synthetic dataset (seed=42); not real production data
