@@ -311,7 +311,7 @@ cd razorpay-agent-spend-governor
 
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 ### Step 2: Start PostgreSQL Container
