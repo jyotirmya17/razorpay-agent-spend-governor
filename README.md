@@ -409,9 +409,8 @@ razorpay-agent-spend-governor/
 ## 14. Documentation Deep-Dives
 
 - 📖 [Architecture Specification](docs/architecture.md)
-- 🚀 [5-Minute Evaluator Demo Runbook](docs/demo_runbook.md)
-- 🛡️ [Phase 6 Adversarial Validation Report](docs/phase6_adversarial_validation.md)
-- 📊 [Phase 6 Test Matrix Specifications](docs/phase6_test_matrix.md)
+- 🛡️ [Adversarial Validation Report](docs/phase6_adversarial_validation.md)
+- 📊 [Test Matrix Specifications](docs/phase6_test_matrix.md)
 - 🔍 [System Traceability & DB Invariants](docs/phase6_traceability.md)
 
 ---
