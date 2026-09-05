@@ -10,6 +10,7 @@ class RazorpayConfig(BaseModel):
     key_secret: str = Field(...)
     webhook_secret: str = Field(...)
     account_number: str = Field(...)
+    demo_fund_account_id: str = Field(default="fa_TXuTRlWP1Ojsft")
 
     @field_validator("mode")
     @classmethod
@@ -40,7 +41,11 @@ def load_config() -> RazorpayConfig:
         key_id=os.environ.get("RAZORPAY_KEY_ID", "rzp_test_dummy"),
         key_secret=os.environ.get("RAZORPAY_KEY_SECRET", "dummy_secret"),
         webhook_secret=os.environ.get("RAZORPAY_WEBHOOK_SECRET", "dummy_webhook_secret"),
-        account_number=os.environ.get("RAZORPAY_ACCOUNT_NUMBER")
+        account_number=os.environ.get("RAZORPAY_ACCOUNT_NUMBER"),
+        demo_fund_account_id=os.environ.get(
+            "RAZORPAYX_DEMO_FUND_ACCOUNT_ID",
+            os.environ.get("FUND_ACCOUNT_ID", "fa_TXuTRlWP1Ojsft")
+        ),
     )
 
 def get_config() -> RazorpayConfig:

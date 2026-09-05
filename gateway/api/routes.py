@@ -746,7 +746,7 @@ def run_demo_scenario(scenario_id: str, db: Session = Depends(get_db)):
             "agent_id": "demo_normal_agent",
             "idempotency_key": f"demo_key_1_{unique_suffix}",
             "amount": 10000, # 100 INR
-            "payee_id": "ven_test_normal",
+            "payee_id": get_config().demo_fund_account_id,
             "category": "cloud",
             "provenance": ProvenanceData(
                 source_type="TRUSTED_TASK",
@@ -810,7 +810,7 @@ def run_demo_scenario(scenario_id: str, db: Session = Depends(get_db)):
             "agent_id": "demo_normal_agent",
             "idempotency_key": f"demo_key_replay_{unique_suffix}",
             "amount": 10000,
-            "payee_id": "ven_test_normal",
+            "payee_id": get_config().demo_fund_account_id,
             "category": "cloud",
             "provenance": ProvenanceData(
                 source_type="TRUSTED_TASK",

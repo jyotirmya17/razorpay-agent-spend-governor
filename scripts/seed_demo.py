@@ -18,6 +18,7 @@ from datetime import datetime, timezone, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from gateway.config import get_config
 from gateway.models.db import SessionLocal, Base, engine, Agent, Mandate, MandateUsage, Transaction, ProvenanceRecord, init_db
 
 
@@ -32,8 +33,20 @@ def seed(db=None):
         now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         # Clean up transient scenario executions so velocity feature remains baseline-clean
-        db.query(ProvenanceRecord).filter(ProvenanceRecord.txn_id.like("demo_key_%")).delete(synchronize_session=False)
-        db.query(Transaction).filter(Transaction.txn_id.like("demo_key_%")).delete(synchronize_session=False)
+        demo_agent_ids = ["demo_normal_agent", "demo_policy_agent", "demo_behavior_agent", "demo_provenance_agent", "demo_revocation_agent"]
+        db.query(ProvenanceRecord).delete(synchronize_session=False)
+        db.query(Transaction).filter(Transaction.agent_id.in_(demo_agent_ids)).delete(synchronize_session=False)
+
+        # Reset demo mandate usage and status to clean baseline
+        demo_mandate_ids = ["man_demo_normal", "man_demo_policy", "man_demo_behavior", "man_demo_provenance", "man_demo_revocation"]
+        db.query(MandateUsage).filter(MandateUsage.mandate_id.in_(demo_mandate_ids)).update(
+            {MandateUsage.daily_usage: 0, MandateUsage.weekly_usage: 0},
+            synchronize_session=False,
+        )
+        db.query(Mandate).filter(Mandate.mandate_id.in_(demo_mandate_ids)).update(
+            {Mandate.status: "ACTIVE"},
+            synchronize_session=False,
+        )
         db.commit()
 
         demo_agents = [
@@ -150,15 +163,17 @@ def seed(db=None):
                 ))
 
         # Seed historical SUCCEEDED transactions for demo_normal_agent to establish normal baseline profile
-        if db.query(Transaction).filter_by(agent_id="demo_normal_agent").count() == 0:
+        demo_payee_id = get_config().demo_fund_account_id
+        if db.query(Transaction).filter(Transaction.agent_id == "demo_normal_agent", Transaction.txn_id.like("demo_normal_hist_%")).count() == 0:
             rng = random.Random(42)
             for d in range(48, 0, -1):
                 amt = 10000 + rng.randint(-200, 200)
                 t_stamp = now - timedelta(hours=23 * d)
+                payee = demo_payee_id if d % 2 == 0 else "ven_test_normal"
                 db.add(Transaction(
                     txn_id=f"demo_normal_hist_{d}",
                     agent_id="demo_normal_agent",
-                    payee_id="ven_test_normal",
+                    payee_id=payee,
                     category="cloud",
                     amount=amt,
                     timestamp=t_stamp,
