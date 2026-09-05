@@ -1,4 +1,4 @@
-﻿"""
+"""
 Phase 4.7 Risk Orchestrator.
 
 This module is the single integration point between the Governor policy/idempotency
@@ -52,6 +52,11 @@ from gateway.core.audit import append_audit_event
 logger = logging.getLogger(__name__)
 
 _MODEL_SINGLETON: Optional[BehavioralAnomalyModel] = None
+
+
+def reset_model_singleton():
+    global _MODEL_SINGLETON
+    _MODEL_SINGLETON = None
 
 
 def get_or_train_model(db: Session) -> BehavioralAnomalyModel:
@@ -207,6 +212,20 @@ def orchestrate_payout(
     # --- Provenance evaluation ---
     provenance_reasons = evaluate_provenance(request.provenance)
 
+    # Ensure Transaction record exists (even for policy-blocked requests)
+    txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
+    if not txn:
+        txn = Transaction(
+            txn_id=txn_id,
+            agent_id=request.agent_id,
+            payee_id=request.payee_id,
+            category=request.category,
+            amount=request.amount,
+            status="BLOCKED" if not policy_allowed else "UNKNOWN",
+        )
+        db.add(txn)
+        db.flush()
+
     # --- Persist provenance record ---
     if request.provenance:
         prov_rec = ProvenanceRecord(
@@ -265,8 +284,24 @@ def orchestrate_payout(
     if decision in ("BLOCK", "FLAG"):
         # Mark transaction as BLOCKED or FLAGGED
         txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
-        if txn and txn.status == "AUTHORIZED":
+        if txn:
             txn.status = decision
+            db.commit()
+
+        import json
+        from gateway.models.db import IdempotencyRecord
+        idemp = db.query(IdempotencyRecord).filter_by(idempotency_key=txn_id).first()
+        if idemp:
+            idemp.status = "COMPLETED"
+            idemp.response_payload = json.dumps({
+                "decision": decision,
+                "reason_codes": risk_result["reason_codes"],
+                "anomaly_score": anomaly_score,
+                "model_version": model_version,
+                "transaction_id": txn_id,
+                "agent_id": request.agent_id,
+                "status": decision,
+            })
             db.commit()
 
         append_audit_event(db, "razorpay.payout_not_created", txn_id, {
@@ -275,6 +310,7 @@ def orchestrate_payout(
         })
         db.commit()
         return risk_result, None  # Execution never happens
+
 
     # --- ALLOW path: call existing ExecutionService ---
     from execution.service import ExecutionService

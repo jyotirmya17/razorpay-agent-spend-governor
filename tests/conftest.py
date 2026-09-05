@@ -8,3 +8,15 @@ def mock_env_vars(monkeypatch):
     monkeypatch.setenv("RAZORPAY_KEY_SECRET", "mock_secret")
     monkeypatch.setenv("RAZORPAY_WEBHOOK_SECRET", "mock_webhook")
     monkeypatch.setenv("RAZORPAY_ACCOUNT_NUMBER", "7878780080316316")
+
+    try:
+        from gateway.risk.orchestrator import reset_model_singleton
+        reset_model_singleton()
+    except ImportError:
+        pass
+    yield
+    try:
+        from gateway.risk.orchestrator import reset_model_singleton
+        reset_model_singleton()
+    except ImportError:
+        pass
