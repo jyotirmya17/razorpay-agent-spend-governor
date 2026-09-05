@@ -105,3 +105,26 @@ class WebhookEvent(Base):
     event_type = Column(String, nullable=False)
     payload = Column(String, nullable=False)
     processed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+
+class ProvenanceRecord(Base):
+    __tablename__ = "provenance_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    txn_id = Column(String, ForeignKey("transactions.txn_id"), index=True, nullable=False)
+    source_type = Column(String, nullable=False)
+    source_id = Column(String, nullable=False)
+    source_trust = Column(String, nullable=False)
+    payment_intent_origin = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    sequence_id = Column(Integer, primary_key=True, autoincrement=True)
+    event_id = Column(String, index=True, nullable=False, unique=True) # UUID
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+    event_type = Column(String, nullable=False)
+    entity_id = Column(String, index=True, nullable=False)
+    payload = Column(String, nullable=False)
+    previous_event_hash = Column(String, nullable=False)
+    event_hash = Column(String, nullable=False)

@@ -20,7 +20,15 @@ from execution.service import ExecutionService
 from gateway.client import RazorpayXClient
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+_is_sqlite = DATABASE_URL.startswith("sqlite")
+if _is_sqlite:
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+else:
+    engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function")

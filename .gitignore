@@ -56,6 +56,10 @@ coverage.xml
 # Local DBs
 *.db
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+smoke_test.db-journal
 
 # IDEs
 .vscode/
