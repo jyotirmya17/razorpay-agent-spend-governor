@@ -35,6 +35,10 @@ venv.bak/
 
 # Environment variables
 .env
+
+# Scratch local artifacts
+scratch/
+scratch_audit.py
 .env.local
 .env.*
 
