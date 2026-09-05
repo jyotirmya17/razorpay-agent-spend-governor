@@ -101,7 +101,7 @@ def main():
     # PART A — HARD-NEGATIVE VALIDATION
     # ---------------------------------------------------------
     hard_negative_metrics = {}
-    hn_types = set(t["txn"]["anomaly_type"] for t in test_txns_annotated if not t["txn"]["is_anomaly"] and t["txn"]["anomaly_type"] != "NORMAL")
+    hn_types = sorted(list(set(t["txn"]["anomaly_type"] for t in test_txns_annotated if not t["txn"]["is_anomaly"] and t["txn"]["anomaly_type"] != "NORMAL")))
     
     proof = None
     
@@ -121,7 +121,7 @@ def main():
     # ---------------------------------------------------------
     risk_config = RiskConfig(behavioral_blocking_enabled=False, flag_threshold=best_threshold, block_threshold=0.85)
     adv_profiles = copy.deepcopy(val_profiles)
-    known_agent_id = list(adv_profiles.keys())[0]
+    known_agent_id = sorted(list(adv_profiles.keys()))[0]
     known_profile = adv_profiles[known_agent_id]
     
     base_txn: TransactionRecord = {
@@ -255,13 +255,15 @@ def main():
         abl_model = BehavioralAnomalyModel()
         abl_model.train(abl_train)
         
-        abl_test_preds = []
+        abl_test_features = []
         for t in test_txns_annotated:
             f_copy = copy.deepcopy(t["features"])
             for feat in group_features:
                 f_copy[feat] = 0.0
-            score = abl_model.predict_one(f_copy)["anomaly_score"]
-            abl_test_preds.append(score >= best_threshold)
+            abl_test_features.append(f_copy)
+            
+        scores = [res["anomaly_score"] for res in abl_model.predict_batch(abl_test_features)]
+        abl_test_preds = [s >= best_threshold for s in scores]
             
         abl_metrics = compute_metrics(test_true, abl_test_preds, test_amounts, config)
         ablation_results[group_name] = abl_metrics.f1

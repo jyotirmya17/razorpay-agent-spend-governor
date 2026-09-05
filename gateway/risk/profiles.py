@@ -136,6 +136,6 @@ def temporal_split(
     val_set = known_txns[train_end:val_end]
     
     test_set = known_txns[val_end:] + unseen_txns
-    test_set.sort(key=lambda x: x["timestamp"])
+    test_set.sort(key=lambda x: (x["timestamp"], x["transaction_id"]))
     
     return train_set, val_set, test_set

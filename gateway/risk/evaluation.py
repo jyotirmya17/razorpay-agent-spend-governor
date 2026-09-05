@@ -182,7 +182,7 @@ def evaluate_model(model: BehavioralAnomalyModel, dataset: List[TransactionRecor
     # 7. Sub-population Metrics
     # a. Per-anomaly metrics
     per_anomaly_metrics = {}
-    anomaly_types = set(t["txn"]["anomaly_type"] for t in test_txns_annotated if t["txn"].get("is_anomaly"))
+    anomaly_types = sorted(list(set(t["txn"]["anomaly_type"] for t in test_txns_annotated if t["txn"].get("is_anomaly"))))
     for a_type in anomaly_types:
         subset = [t for t in test_txns_annotated if t["txn"].get("anomaly_type") == a_type or not t["txn"].get("is_anomaly")]
         sub_true = [t["txn"].get("is_anomaly", False) for t in subset]
@@ -200,7 +200,7 @@ def evaluate_model(model: BehavioralAnomalyModel, dataset: List[TransactionRecor
         
     # b. Hard-negative metrics
     hard_negative_metrics = {}
-    hn_types = set(t["txn"]["hard_negative_type"] for t in test_txns_annotated if t["txn"].get("hard_negative_type"))
+    hn_types = sorted(list(set(t["txn"]["hard_negative_type"] for t in test_txns_annotated if t["txn"].get("hard_negative_type"))))
     for hn_type in hn_types:
         subset = [t for t in test_txns_annotated if t["txn"].get("hard_negative_type") == hn_type]
         sub_pred = [t["pred"] for t in subset]

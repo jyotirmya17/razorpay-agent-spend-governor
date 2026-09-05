@@ -109,6 +109,31 @@ class BehavioralAnomalyModel:
             "model_version": self.model_version
         }
 
+    def predict_batch(self, feature_dicts: list[dict]) -> list[dict]:
+        """
+        Scores a list of feature dictionaries in batch.
+        """
+        if not self.is_fitted:
+            raise RuntimeError("Model must be trained before calling predict.")
+            
+        if not feature_dicts:
+            return []
+            
+        X = np.stack([self._dict_to_array(f) for f in feature_dicts])
+        raw_scores = self.model.decision_function(X)
+        raw_preds = self.model.predict(X)
+        
+        results = []
+        for s, p in zip(raw_scores, raw_preds):
+            anomaly_score = max(0.0, min(1.0, 0.5 - float(s)))
+            prediction = "ANOMALY" if int(p) == -1 else "NORMAL"
+            results.append({
+                "anomaly_score": anomaly_score,
+                "prediction": prediction,
+                "model_version": self.model_version
+            })
+        return results
+
     def save(self, filepath: str) -> None:
         """
         Serialize the local trusted model using joblib.

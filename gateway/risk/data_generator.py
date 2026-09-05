@@ -42,53 +42,55 @@ class AgentSimulationProfile:
         self.preferred_payees = preferred_payees
         self.txns_per_week = txns_per_week
 
-def generate_simulation_profiles(num_agents: int) -> List[AgentSimulationProfile]:
+def generate_simulation_profiles(num_agents: int, rng: random.Random = None) -> List[AgentSimulationProfile]:
+    if rng is None:
+        rng = random.Random(42)
     profiles = []
     agent_types = ["procurement", "saas_billing", "contractor", "travel", "operations", "finance"]
     
     for _ in range(num_agents):
-        agent_id = f"ag_{random.getrandbits(48):012x}"
-        agent_type = random.choice(agent_types)
+        agent_id = f"ag_{rng.getrandbits(48):012x}"
+        agent_type = rng.choice(agent_types)
         
         if agent_type == "saas_billing":
             min_a, max_a = 100000, 1000000 # 1000 to 10000 INR
             hours = list(range(9, 18))
             days = [0, 1, 2, 3, 4]
             cats = ["cloud", "software", "subscription"]
-            txns_per_week = random.uniform(1.0, 5.0)
+            txns_per_week = rng.uniform(1.0, 5.0)
         elif agent_type == "contractor":
             min_a, max_a = 2000000, 8000000 # 20k to 80k INR
             hours = list(range(12, 18))
             days = [0, 1, 2, 3, 4]
             cats = ["contractor", "freelance", "services"]
-            txns_per_week = random.uniform(0.5, 2.0)
+            txns_per_week = rng.uniform(0.5, 2.0)
         elif agent_type == "travel":
             min_a, max_a = 500000, 3000000
             hours = list(range(6, 23))
             days = [0, 1, 2, 3, 4, 5, 6]
             cats = ["flight", "hotel", "cab", "meal"]
-            txns_per_week = random.uniform(2.0, 10.0)
+            txns_per_week = rng.uniform(2.0, 10.0)
         elif agent_type == "operations":
             min_a, max_a = 50000, 500000
             hours = list(range(8, 20))
             days = [0, 1, 2, 3, 4, 5]
             cats = ["supplies", "logistics", "maintenance"]
-            txns_per_week = random.uniform(5.0, 20.0)
+            txns_per_week = rng.uniform(5.0, 20.0)
         elif agent_type == "finance":
             min_a, max_a = 5000000, 50000000
             hours = list(range(10, 16))
             days = [0, 1, 2, 3, 4]
             cats = ["tax", "legal", "compliance", "payroll"]
-            txns_per_week = random.uniform(0.1, 1.0)
+            txns_per_week = rng.uniform(0.1, 1.0)
         else: # procurement
             min_a, max_a = 1000000, 20000000
             hours = list(range(9, 17))
             days = [0, 1, 2, 3, 4]
             cats = ["equipment", "inventory", "hardware"]
-            txns_per_week = random.uniform(3.0, 15.0)
+            txns_per_week = rng.uniform(3.0, 15.0)
             
-        num_payees = random.randint(3, 15)
-        payees = [f"fa_{random.getrandbits(48):012x}" for _ in range(num_payees)]
+        num_payees = rng.randint(3, 15)
+        payees = [f"fa_{rng.getrandbits(48):012x}" for _ in range(num_payees)]
         
         profiles.append(AgentSimulationProfile(
             agent_id, agent_type, min_a, max_a, hours, days, cats, payees, txns_per_week
@@ -103,9 +105,9 @@ def generate_dataset(
     anomaly_rate: float = 0.05,
     hard_negative_rate: float = 0.05
 ) -> List[TransactionRecord]:
-    random.seed(seed)
+    rng = random.Random(seed)
     
-    profiles = generate_simulation_profiles(num_agents)
+    profiles = generate_simulation_profiles(num_agents, rng=rng)
     total_weight = sum(p.txns_per_week for p in profiles)
     
     end_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
@@ -136,64 +138,64 @@ def generate_dataset(
         for _ in range(agent_txns_count):
             if burst_txns_remaining > 0:
                 burst_txns_remaining -= 1
-                burst_base_ts += timedelta(minutes=random.randint(1, 15))
+                burst_base_ts += timedelta(minutes=rng.randint(1, 15))
                 
                 agent_txns.append(TransactionRecord(
-                    transaction_id=f"txn_{random.getrandbits(64):016x}",
+                    transaction_id=f"txn_{rng.getrandbits(64):016x}",
                     agent_id=profile.agent_id,
                     timestamp=burst_base_ts,
-                    amount_paise=int(random.randint(profile.min_amount, profile.max_amount)),
+                    amount_paise=int(rng.randint(profile.min_amount, profile.max_amount)),
                     currency="INR",
-                    payee_id=random.choice(profile.preferred_payees),
-                    category=random.choice(profile.preferred_categories),
+                    payee_id=rng.choice(profile.preferred_payees),
+                    category=rng.choice(profile.preferred_categories),
                     status="SUCCEEDED",
                     is_anomaly=False,
                     anomaly_type="LEGITIMATE_TEMPORARY_SPIKE"
                 ))
                 continue
                 
-            days_offset = random.randint(0, 364)
+            days_offset = rng.randint(0, 364)
             txn_date = start_date + timedelta(days=days_offset)
             
-            r = random.random()
+            r = rng.random()
             if r < anomaly_rate:
                 is_anomaly = True
-                anomaly_type = random.choice(anomaly_types)
+                anomaly_type = rng.choice(anomaly_types)
             elif r < anomaly_rate + hard_negative_rate:
                 is_anomaly = False
-                anomaly_type = random.choice(hard_negative_types) # Store type even if it's a hard negative
+                anomaly_type = rng.choice(hard_negative_types) # Store type even if it's a hard negative
             else:
                 is_anomaly = False
                 anomaly_type = "NORMAL"
                 
-            amount = random.randint(profile.min_amount, profile.max_amount)
-            payee = random.choice(profile.preferred_payees)
-            category = random.choice(profile.preferred_categories)
-            hour = random.choice(profile.active_hours)
+            amount = rng.randint(profile.min_amount, profile.max_amount)
+            payee = rng.choice(profile.preferred_payees)
+            category = rng.choice(profile.preferred_categories)
+            hour = rng.choice(profile.active_hours)
             
             # Anomalies overrides
             if is_anomaly:
                 if anomaly_type == "AMOUNT_DEVIATION":
-                    amount = profile.max_amount * random.randint(3, 10)
+                    amount = profile.max_amount * rng.randint(3, 10)
                 elif anomaly_type == "NEW_PAYEE":
-                    payee = f"fa_anomaly_{random.getrandbits(32):08x}"
+                    payee = f"fa_anomaly_{rng.getrandbits(32):08x}"
                 elif anomaly_type == "ODD_HOUR":
                     available_hours = [h for h in range(24) if h not in profile.active_hours]
-                    hour = random.choice(available_hours) if available_hours else 0
+                    hour = rng.choice(available_hours) if available_hours else 0
                 elif anomaly_type == "CATEGORY_DEVIATION":
                     category = "unauthorized_category"
                 elif anomaly_type == "BEHAVIOR_SHIFT":
-                    amount = profile.max_amount * random.uniform(1.5, 3.0)
+                    amount = profile.max_amount * rng.uniform(1.5, 3.0)
                     available_hours = [h for h in range(24) if h not in profile.active_hours]
-                    hour = random.choice(available_hours) if available_hours else 0
+                    hour = rng.choice(available_hours) if available_hours else 0
                     category = "shifted_category"
             
             # Hard negatives overrides
             if not is_anomaly and anomaly_type != "NORMAL":
                 if anomaly_type == "LEGITIMATE_NEW_VENDOR":
-                    payee = f"fa_legit_new_{random.getrandbits(32):08x}"
+                    payee = f"fa_legit_new_{rng.getrandbits(32):08x}"
                 elif anomaly_type == "LEGITIMATE_LARGE_INVOICE":
-                    amount = profile.max_amount * random.randint(2, 5)
+                    amount = profile.max_amount * rng.randint(2, 5)
                 elif anomaly_type == "LEGITIMATE_WEEKEND_PAYMENT":
                     # Force weekend
                     days_offset += (5 - txn_date.weekday()) % 7
@@ -209,11 +211,11 @@ def generate_dataset(
                     attempts += 1
                         
             final_timestamp = txn_date.replace(
-                hour=hour, minute=random.randint(0, 59), second=random.randint(0, 59)
+                hour=hour, minute=rng.randint(0, 59), second=rng.randint(0, 59)
             )
             
             agent_txns.append(TransactionRecord(
-                transaction_id=f"txn_{random.getrandbits(64):016x}",
+                transaction_id=f"txn_{rng.getrandbits(64):016x}",
                 agent_id=profile.agent_id,
                 timestamp=final_timestamp,
                 amount_paise=int(amount),
@@ -226,12 +228,12 @@ def generate_dataset(
             ))
             
             if anomaly_type == "LEGITIMATE_TEMPORARY_SPIKE":
-                burst_txns_remaining = random.randint(2, 3)
+                burst_txns_remaining = rng.randint(2, 3)
                 burst_base_ts = final_timestamp
             
         transactions.extend(agent_txns)
         
-    transactions.sort(key=lambda x: x["timestamp"])
+    transactions.sort(key=lambda x: (x["timestamp"], x["transaction_id"]))
     
     if len(transactions) > num_transactions:
         transactions = transactions[:num_transactions]
