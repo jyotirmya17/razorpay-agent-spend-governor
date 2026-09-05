@@ -27,7 +27,7 @@ const NAV_ITEMS = [
   { name: "Transactions", href: "/transactions", icon: CreditCard },
   { name: "Risk", href: "/risk", icon: AlertTriangle },
   { name: "Audit Trail", href: "/audit", icon: FileCheck },
-  { name: "Demo Center", href: "/demo", icon: PlayCircle },
+  { name: "Governance Scenarios", href: "/demo", icon: PlayCircle },
 ];
 
 export function Sidebar() {
@@ -60,15 +60,16 @@ export function Sidebar() {
         {/* Brand Header */}
         <div className="p-5 border-b border-[#232B36] flex items-center justify-between">
           <div>
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 rounded bg-[#3395FF] flex items-center justify-center text-[#0B0F14] font-extrabold text-xs">
-                G
-              </div>
-              <span className="font-bold text-sm tracking-wider uppercase text-white">
+            <div className="flex items-center space-x-2.5">
+              <svg className="w-6 h-6 text-[#3395FF]" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" rx="7" fill="#3395FF" fillOpacity="0.12" stroke="#3395FF" strokeOpacity="0.3" strokeWidth="1.5" />
+                <path d="M21 11.5H13.5C12.1193 11.5 11 12.6193 11 14V18C11 19.3807 12.1193 20.5 13.5 20.5H19.5C20.8807 20.5 22 19.3807 22 18V15.5H16.5" stroke="#3395FF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="font-bold text-sm tracking-wider uppercase text-white font-mono">
                 Governor
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1 font-medium">
+            <p className="text-[11px] text-slate-400 mt-1 font-medium font-mono">
               Agent Spend Governor
             </p>
           </div>

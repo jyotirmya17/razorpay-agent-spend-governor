@@ -47,10 +47,10 @@ export default function AgentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white font-mono tracking-tight">
-            Governed AI Agents
+            Governed Agent Profiles
           </h2>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Real agents, authority mandates, daily utilization & transaction activity
+            Agent profiles, authority mandates, daily utilization & transaction activity
           </p>
         </div>
         <span className="text-xs font-mono text-slate-400 bg-[#11161D] px-3 py-1.5 rounded-lg border border-[#232B36]">

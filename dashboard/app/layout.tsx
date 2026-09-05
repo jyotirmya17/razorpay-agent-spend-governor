@@ -4,8 +4,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 
 export const metadata: Metadata = {
-  title: "Agent Spend Governor — Fintech Security Console",
-  description: "Defense layer for autonomous AI-agent payouts.",
+  title: "Agent Spend Governor — Fintech Governance Console",
+  description: "Governance layer for automated agent payouts.",
 };
 
 export default function RootLayout({

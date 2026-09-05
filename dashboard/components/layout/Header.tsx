@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   "/": {
     title: "Overview",
-    subtitle: "Real-time AI-agent payout defense console",
+    subtitle: "Real-time agent payout governance console",
   },
   "/agents": {
     title: "Agents & Authority",
@@ -20,18 +20,18 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   },
   "/transactions": {
     title: "Transactions",
-    subtitle: "High-density decision pipeline investigation log",
+    subtitle: "Decision pipeline investigation log",
   },
   "/risk": {
     title: "Risk Command Center",
-    subtitle: "Isolation Forest anomaly scores & 12 feature signals",
+    subtitle: "Isolation Forest anomaly scores & feature signals",
   },
   "/audit": {
     title: "Audit Trail",
     subtitle: "Cryptographic SHA-256 tamper-evident event log",
   },
   "/demo": {
-    title: "Demo Center",
+    title: "Governance Scenarios",
     subtitle: "Interactive evaluator scenario test suite",
   },
 };
@@ -43,7 +43,7 @@ export function Header() {
 
   const pageInfo = PAGE_TITLES[pathname] || {
     title: "Governor Dashboard",
-    subtitle: "Defense layer for autonomous AI-agent payouts",
+    subtitle: "Governance layer for automated agent payouts",
   };
 
   const updateTimestamp = () => {

@@ -72,11 +72,7 @@ export default function OverviewPage() {
       {/* Hero & Core Thesis Card */}
       <div className="bg-gradient-to-r from-[#11161D] via-[#171D25] to-[#11161D] border border-[#232B36] rounded-xl p-6 relative overflow-hidden">
         <div className="max-w-3xl space-y-2">
-          <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded bg-[#3395FF]/10 text-[#3395FF] border border-[#3395FF]/20 text-xs font-mono font-bold">
-            <Zap className="w-3.5 h-3.5" />
-            <span>Autonomous AI Spend Protection Engine</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-2xl font-bold text-white tracking-tight font-mono">
             Agent Spend Governor
           </h2>
           <p className="text-slate-300 text-sm leading-relaxed">
@@ -96,7 +92,7 @@ export default function OverviewPage() {
             href="/demo"
             className="px-3 py-1.5 bg-[#3395FF] hover:bg-[#2575d6] text-white font-bold rounded-lg transition-colors flex items-center space-x-1.5 text-xs"
           >
-            <span>Open Demo Center</span>
+            <span>Open Governance Scenarios</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -120,7 +116,7 @@ export default function OverviewPage() {
             <p className="text-2xl font-bold text-white font-mono tabular-nums">
               {stats?.total_agents || 0}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Active governed AI agents</p>
+            <p className="text-[10px] text-slate-500 mt-1 font-mono">Active governed agent profiles</p>
           </div>
         </div>
 
@@ -255,7 +251,7 @@ export default function OverviewPage() {
 
         {recentTxns.length === 0 ? (
           <div className="p-8 text-center text-slate-500 font-mono text-xs border border-dashed border-[#232B36] rounded-lg">
-            No transactions processed yet. Run a scenario in the Demo Center to seed activity.
+            No transactions processed yet. Run a scenario in Governance Scenarios to seed activity.
           </div>
         ) : (
           <div className="space-y-2">

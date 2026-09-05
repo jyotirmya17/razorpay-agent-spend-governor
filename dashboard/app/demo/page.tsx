@@ -115,7 +115,7 @@ export default function DemoPage() {
           <div className="flex items-center space-x-2.5">
             <Zap className="w-5 h-5 text-[#3395FF]" />
             <h2 className="text-lg font-bold text-white font-mono uppercase tracking-wider">
-              Evaluator Interactive Demo Suite
+              Governance Scenarios Evaluation Suite
             </h2>
           </div>
           <span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-bold">
@@ -217,7 +217,7 @@ export default function DemoPage() {
                     <div className="flex items-center justify-between border-b border-[#232B36] pb-2">
                       <span className="text-slate-400">Actual Decision:</span>
                       <span
-                        className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                        className={`font-bold px-2 py-0.5 rounded text-[11px] inline-flex items-center space-x-1.5 ${
                           res.actual_decision === "ALLOW"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                             : res.actual_decision === "FLAG"
@@ -225,7 +225,16 @@ export default function DemoPage() {
                             : "bg-red-500/10 text-red-400 border border-red-500/20"
                         }`}
                       >
-                        {res.actual_decision}
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            res.actual_decision === "ALLOW"
+                              ? "bg-emerald-400"
+                              : res.actual_decision === "FLAG"
+                              ? "bg-amber-400"
+                              : "bg-red-400"
+                          }`}
+                        />
+                        <span>{res.actual_decision}</span>
                       </span>
                     </div>
 
@@ -248,8 +257,11 @@ export default function DemoPage() {
                       </div>
                     )}
 
-                    <div className="text-[10px] text-slate-400 pt-1 border-t border-[#232B36]">
-                      <span>Audit Events Generated: <strong className="text-white">{res.audit_events_created}</strong></span>
+                    <div className="text-[10px] text-slate-400 pt-1 border-t border-[#232B36] flex items-center justify-between">
+                      <span>Audit Events Generated:</span>
+                      <strong className="text-white font-mono">
+                        {res.audit_events_count ?? res.audit_events_created ?? 0}
+                      </strong>
                     </div>
                   </div>
                 )}
