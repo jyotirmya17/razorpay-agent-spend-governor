@@ -6,6 +6,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SplitType from "split-type";
 import ArchitectureDiagram from "@/components/landing/ArchitectureDiagram";
 import StatCounter from "@/components/landing/StatCounter";
 
@@ -54,21 +55,26 @@ export default function LandingPage() {
         });
       });
 
-      // 3. Problem Section Scrub Reveal
-      const problemLines = gsap.utils.toArray<HTMLElement>('.problem-line');
-      if (problemLines.length > 0) {
-        gsap.to(problemLines, {
-          color: "#000000",
-          opacity: 1,
-          fontWeight: 800,
-          stagger: 0.2,
-          scrollTrigger: {
-            trigger: ".problem-section",
-            start: "top 75%",
-            end: "bottom 75%",
-            scrub: 2.5, // much smoother scrub delay
-          }
-        });
+      // 3. Problem Section Scrub Reveal (Line by Line)
+      const problemText = document.querySelector('.problem-text');
+      if (problemText) {
+        // Automatically splits the paragraph into visual DOM lines
+        const split = new SplitType(problemText as HTMLElement, { types: 'lines' });
+        
+        if (split.lines && split.lines.length > 0) {
+          gsap.set(split.lines, { opacity: 0.15, color: "#000000", fontWeight: 500 });
+          gsap.to(split.lines, {
+            opacity: 1,
+            fontWeight: 800,
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: ".problem-section",
+              start: "top 75%",
+              end: "bottom 75%",
+              scrub: 1.5,
+            }
+          });
+        }
       }
       
       // Button hover effects
@@ -88,7 +94,7 @@ export default function LandingPage() {
   }, { scope: containerRef });
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#FDE68A] text-[#000000] font-sans overflow-x-hidden selection:bg-[#000000] selection:text-[#FDE68A]">
+    <div ref={containerRef} className="min-h-screen bg-[#FDFBF7] text-[#000000] font-sans overflow-x-hidden selection:bg-[#000000] selection:text-[#FDFBF7]">
       
       {/* 1. HERO */}
       <section className="relative px-6 pt-24 pb-16 min-h-[80vh] flex flex-col justify-center border-b border-black/10">
@@ -112,7 +118,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
             <Link
               href="/dashboard"
-              className="primary-btn hero-btn px-10 py-5 bg-black text-[#FDE68A] font-bold transition-colors flex items-center space-x-3 text-sm tracking-widest uppercase rounded-sm"
+              className="primary-btn hero-btn px-10 py-5 bg-black text-[#FDFBF7] font-bold transition-colors flex items-center space-x-3 text-sm tracking-widest uppercase rounded-sm"
             >
               <span>View Live Dashboard</span>
               <ArrowRight className="arrow-icon w-5 h-5" />
@@ -133,12 +139,8 @@ export default function LandingPage() {
       <section className="problem-section px-6 py-40 border-b border-black/10">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-12 font-bold opacity-60">The Problem</h2>
-          <p className="text-2xl md:text-4xl lg:text-[2.75rem] text-black/20 text-justify leading-tight font-medium font-general tracking-tight">
-            <span className="problem-line transition-colors duration-500">Imagine an authorized AI agent reading an untrusted invoice. </span>
-            <span className="problem-line transition-colors duration-500">An invisible prompt injection redirects the payment instruction to an attacker's account. </span>
-            <span className="problem-line transition-colors duration-500">Every field looks structurally normal. </span>
-            <span className="problem-line transition-colors duration-500">Traditional controls—maker-checker flows, budgets, and card limits—will miss this attack </span>
-            <span className="problem-line transition-colors duration-500">because none of them verify the <em className="not-italic">origin</em> of the instruction payload.</span>
+          <p className="problem-text text-3xl md:text-5xl lg:text-[3.25rem] text-black text-justify leading-[1.2] font-medium font-general tracking-tight">
+            Imagine an authorized AI agent reading an untrusted invoice. An invisible prompt injection redirects the payment instruction to an attacker's account. Every field looks structurally normal. Traditional controls—maker-checker flows, budgets, and card limits—will miss this attack because none of them verify the origin of the instruction payload.
           </p>
         </div>
       </section>
@@ -165,7 +167,7 @@ export default function LandingPage() {
               ></iframe>
             ) : (
               <div className="text-white/40 flex flex-col items-center space-y-6">
-                <PlayCircle className="w-20 h-20 opacity-30 group-hover:opacity-100 group-hover:text-[#FDE68A] transition-all cursor-pointer" />
+                <PlayCircle className="w-20 h-20 opacity-30 group-hover:opacity-100 group-hover:text-[#FDFBF7] transition-all cursor-pointer" />
                 <span className="font-mono text-xs uppercase tracking-widest text-white/50">Loom Embed Placeholder</span>
               </div>
             )}
@@ -177,8 +179,8 @@ export default function LandingPage() {
       <section className="px-6 py-32 border-b border-black/10">
         <div className="max-w-4xl mx-auto text-center gsap-reveal">
           <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-10 font-bold opacity-60">The Honest Finding: Rules vs ML</h2>
-          <div className="p-10 border-2 border-black shadow-[8px_8px_0_0_#000] bg-[#FDE68A] rounded-sm">
-            <p className="text-xl md:text-3xl text-black leading-relaxed text-left font-semibold font-general tracking-tight">
+          <div className="p-10 border-2 border-black shadow-[8px_8px_0_0_#000] bg-[#FDFBF7] rounded-sm relative">
+            <p className="text-xl md:text-3xl text-black leading-relaxed text-left font-semibold font-general tracking-tight relative z-10">
               A simple deterministic rules baseline currently beats the ML model on aggregate cost. Evaluating over historical distributions, rigid caps stop simple over-spend more cheaply. The true value of the ML layer is not in broad statistical coverage, but in acting as a safety net against <strong className="font-extrabold underline decoration-4 underline-offset-4">adversarial, multi-signal attacks</strong>—like a hijacked agent splitting a large illicit payload across multiple small, varied transactions that individually bypass static rule caps.
             </p>
           </div>
@@ -213,7 +215,7 @@ export default function LandingPage() {
 
 function Badge({ text, className = "" }: { text: string, className?: string }) {
   return (
-    <span className={`px-4 py-2 border-2 border-black bg-[#FDE68A] text-[11px] font-mono font-bold tracking-widest text-black uppercase rounded-sm ${className}`}>
+    <span className={`px-4 py-2 border-2 border-black bg-[#FDFBF7] text-[11px] font-mono font-bold tracking-widest text-black uppercase rounded-sm ${className}`}>
       {text}
     </span>
   );
