@@ -57,20 +57,21 @@ export default function LandingPage() {
 
       // 3. Problem Section Scrub Reveal (Line by Line)
       const problemText = document.querySelector('.problem-text');
+      let split: any = null;
+      
       if (problemText) {
         // Automatically splits the paragraph into visual DOM lines
-        const split = new SplitType(problemText as HTMLElement, { types: 'lines' });
+        split = new SplitType(problemText as HTMLElement, { types: 'lines', lineClass: 'split-line' });
         
         if (split.lines && split.lines.length > 0) {
-          gsap.set(split.lines, { opacity: 0.15, color: "#000000", fontWeight: 500 });
+          gsap.set(split.lines, { opacity: 0.15, color: "#000000" });
           gsap.to(split.lines, {
             opacity: 1,
-            fontWeight: 800,
             stagger: 0.1,
             scrollTrigger: {
               trigger: ".problem-section",
-              start: "top 75%",
-              end: "bottom 75%",
+              start: "top 70%",
+              end: "bottom 70%",
               scrub: 1.5,
             }
           });
@@ -90,6 +91,12 @@ export default function LandingPage() {
           gsap.to(arrow, { x: 0, duration: 0.2, ease: "power1.in" });
         });
       }
+
+      return () => {
+        if (split) {
+          split.revert();
+        }
+      };
     }
   }, { scope: containerRef });
 
