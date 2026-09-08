@@ -12,7 +12,7 @@ import StatCounter from "@/components/landing/StatCounter";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const LOOM_EMBED_URL = "REPLACE_ME";
+const LOOM_EMBED_URL = "https://www.loom.com/embed/500a29da79074e878ec80e008de7727e";
 
 export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
