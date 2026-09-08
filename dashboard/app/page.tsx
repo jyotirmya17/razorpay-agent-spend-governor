@@ -61,12 +61,12 @@ export default function LandingPage() {
           color: "#000000",
           opacity: 1,
           fontWeight: 800,
-          stagger: 0.5,
+          stagger: 0.2,
           scrollTrigger: {
             trigger: ".problem-section",
-            start: "top 70%",
-            end: "bottom 70%",
-            scrub: 1, // adds slight smoothing to scrub
+            start: "top 75%",
+            end: "bottom 75%",
+            scrub: 2.5, // much smoother scrub delay
           }
         });
       }
@@ -91,9 +91,9 @@ export default function LandingPage() {
     <div ref={containerRef} className="min-h-screen bg-[#FDE68A] text-[#000000] font-sans overflow-x-hidden selection:bg-[#000000] selection:text-[#FDE68A]">
       
       {/* 1. HERO */}
-      <section className="relative px-6 pt-32 pb-24 min-h-[90vh] flex items-center border-b border-black/10">
+      <section className="relative px-6 pt-24 pb-16 min-h-[80vh] flex flex-col justify-center border-b border-black/10">
         
-        <div className="max-w-6xl mx-auto w-full relative z-10 flex flex-col items-start space-y-12">
+        <div className="max-w-6xl mx-auto w-full relative z-10 flex flex-col items-start space-y-8">
           <div className="flex flex-wrap gap-3">
             <Badge className="hero-badge" text="DETERMINISTIC POLICY" />
             <Badge className="hero-badge" text="BEHAVIORAL ANOMALY DETECTION" />
@@ -109,7 +109,7 @@ export default function LandingPage() {
             Because traditional authorization checks <em>what</em> was decided, not <em>why</em>. Agent Spend Governor is the missing defense layer between autonomous agents and RazorpayX.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center gap-6 pt-8">
+          <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
             <Link
               href="/dashboard"
               className="primary-btn hero-btn px-10 py-5 bg-black text-[#FDE68A] font-bold transition-colors flex items-center space-x-3 text-sm tracking-widest uppercase rounded-sm"
@@ -131,14 +131,14 @@ export default function LandingPage() {
 
       {/* 2. THE PROBLEM */}
       <section className="problem-section px-6 py-40 border-b border-black/10">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-12 font-bold opacity-60">The Problem</h2>
-          <p className="text-3xl md:text-5xl lg:text-6xl text-black/20 leading-tight font-medium font-general tracking-tight">
-            <span className="problem-line transition-colors duration-300 block mb-2">Imagine an authorized AI agent reading an untrusted invoice. </span>
-            <span className="problem-line transition-colors duration-300 block mb-2">An invisible prompt injection redirects the payment instruction to an attacker's account. </span>
-            <span className="problem-line transition-colors duration-300 block mb-2">Every field looks structurally normal. </span>
-            <span className="problem-line transition-colors duration-300 block mb-2">Traditional controls—maker-checker flows, budgets, and card limits—will miss this attack </span>
-            <span className="problem-line transition-colors duration-300 block mb-2">because none of them verify the <em className="not-italic">origin</em> of the instruction payload.</span>
+          <p className="text-2xl md:text-4xl lg:text-[2.75rem] text-black/20 text-justify leading-tight font-medium font-general tracking-tight">
+            <span className="problem-line transition-colors duration-500">Imagine an authorized AI agent reading an untrusted invoice. </span>
+            <span className="problem-line transition-colors duration-500">An invisible prompt injection redirects the payment instruction to an attacker's account. </span>
+            <span className="problem-line transition-colors duration-500">Every field looks structurally normal. </span>
+            <span className="problem-line transition-colors duration-500">Traditional controls—maker-checker flows, budgets, and card limits—will miss this attack </span>
+            <span className="problem-line transition-colors duration-500">because none of them verify the <em className="not-italic">origin</em> of the instruction payload.</span>
           </p>
         </div>
       </section>
