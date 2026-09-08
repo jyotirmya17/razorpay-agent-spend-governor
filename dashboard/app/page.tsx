@@ -64,10 +64,15 @@ export default function LandingPage() {
         split = new SplitType(problemText as HTMLElement, { types: 'lines', lineClass: 'split-line' });
         
         if (split.lines && split.lines.length > 0) {
-          gsap.set(split.lines, { opacity: 0.15, color: "#000000" });
+          gsap.set(split.lines, { 
+            opacity: 0.15, 
+            color: "#000000",
+            WebkitTextStrokeWidth: "0px",
+            WebkitTextStrokeColor: "#000000"
+          });
           gsap.to(split.lines, {
             opacity: 1,
-            fontWeight: 900,
+            WebkitTextStrokeWidth: "2px", // Extremely smooth, fat bolding without layout shift
             stagger: 0.1,
             scrollTrigger: {
               trigger: ".problem-section",
