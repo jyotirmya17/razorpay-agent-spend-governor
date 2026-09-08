@@ -16,16 +16,23 @@
 body {
   background-color: var(--bg-main);
   color: #E2E8F0;
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
 }
 
-.font-mono {
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.font-sans {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+.font-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.font-general {
+  font-family: 'General Sans', var(--font-inter), sans-serif;
+}
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

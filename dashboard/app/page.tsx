@@ -1,316 +1,220 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  Users,
-  Shield,
-  CreditCard,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Activity,
-  ArrowRight,
-  ShieldCheck,
-  RefreshCw,
-  Zap,
-} from "lucide-react";
-import { api } from "@/lib/api";
-import { OverviewStats, TransactionSummary, SystemHealth } from "@/lib/types";
-import { ProvenanceBadge } from "@/components/governance/ProvenanceBadge";
+import { ArrowRight, PlayCircle } from "lucide-react";
+import { useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import ArchitectureDiagram from "@/components/landing/ArchitectureDiagram";
+import StatCounter from "@/components/landing/StatCounter";
 
-export default function OverviewPage() {
-  const [stats, setStats] = useState<OverviewStats | null>(null);
-  const [recentTxns, setRecentTxns] = useState<TransactionSummary[]>([]);
-  const [health, setHealth] = useState<SystemHealth | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-  const loadData = async () => {
-    try {
-      setError(null);
-      const [s, t, h] = await Promise.all([
-        api.getOverviewStats(),
-        api.getTransactions({ page: 1, page_size: 6 }),
-        api.getHealth(),
-      ]);
-      setStats(s);
-      setRecentTxns(t.items || []);
-      setHealth(h);
-    } catch (err: any) {
-      setError(err.message || "Failed to load governor overview");
-    } finally {
-      setLoading(false);
+const LOOM_EMBED_URL = "REPLACE_ME";
+
+export default function LandingPage() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Check for reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if (!prefersReducedMotion) {
+      // 1. Hero Load Animation
+      const tl = gsap.timeline();
+      
+      tl.from(".hero-badge", {
+        y: 20, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out"
+      })
+      .from(".hero-headline", {
+        y: 20, opacity: 0, duration: 0.6, ease: "power2.out"
+      }, "-=0.3")
+      .from(".hero-subtext", {
+        y: 20, opacity: 0, duration: 0.6, ease: "power2.out"
+      }, "-=0.3")
+      .from(".hero-btn", {
+        y: 20, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out"
+      }, "-=0.3");
+
+      // 2. Scroll Reveals
+      const revealElements = gsap.utils.toArray<HTMLElement>('.gsap-reveal');
+      
+      revealElements.forEach((el) => {
+        gsap.from(el, {
+          y: 40,
+          opacity: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%", 
+            once: true
+          }
+        });
+      });
+
+      // 3. Problem Section Scrub Reveal
+      const problemLines = gsap.utils.toArray<HTMLElement>('.problem-line');
+      if (problemLines.length > 0) {
+        gsap.to(problemLines, {
+          color: "#000000",
+          opacity: 1,
+          fontWeight: 800,
+          stagger: 0.5,
+          scrollTrigger: {
+            trigger: ".problem-section",
+            start: "top 70%",
+            end: "bottom 70%",
+            scrub: 1, // adds slight smoothing to scrub
+          }
+        });
+      }
+      
+      // Button hover effects
+      const primaryBtn = document.querySelector('.primary-btn');
+      if (primaryBtn) {
+        const arrow = primaryBtn.querySelector('.arrow-icon');
+        primaryBtn.addEventListener('mouseenter', () => {
+          gsap.to(primaryBtn, { y: -2, boxShadow: "0 8px 30px rgba(0,0,0,0.3)", duration: 0.2, ease: "power1.out" });
+          gsap.to(arrow, { x: 4, duration: 0.2, ease: "power1.out" });
+        });
+        primaryBtn.addEventListener('mouseleave', () => {
+          gsap.to(primaryBtn, { y: 0, boxShadow: "0 0px 0px rgba(0,0,0,0)", duration: 0.2, ease: "power1.in" });
+          gsap.to(arrow, { x: 0, duration: 0.2, ease: "power1.in" });
+        });
+      }
     }
-  };
-
-  useEffect(() => {
-    loadData();
-    window.addEventListener("governor_refresh", loadData);
-    const interval = setInterval(loadData, 10000);
-    return () => {
-      window.removeEventListener("governor_refresh", loadData);
-      clearInterval(interval);
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse bg-[#11161D] h-32 rounded-xl border border-[#232B36]" />
-        <div className="grid grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse bg-[#11161D] h-24 rounded-xl border border-[#232B36]" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  }, { scope: containerRef });
 
   return (
-    <div className="space-y-6">
-      {/* Hero & Core Thesis Card */}
-      <div className="bg-gradient-to-r from-[#11161D] via-[#171D25] to-[#11161D] border border-[#232B36] rounded-xl p-6 relative overflow-hidden">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="text-2xl font-bold text-white tracking-tight font-mono">
-            Agent Spend Governor
-          </h2>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            <strong className="text-white">Core Thesis:</strong> &ldquo;An authorized transaction can still be risky when agent behavior changes or the payment decision originates from untrusted content.&rdquo;
+    <div ref={containerRef} className="min-h-screen bg-[#FDE68A] text-[#000000] font-sans overflow-x-hidden selection:bg-[#000000] selection:text-[#FDE68A]">
+      
+      {/* 1. HERO */}
+      <section className="relative px-6 pt-32 pb-24 min-h-[90vh] flex items-center border-b border-black/10">
+        
+        <div className="max-w-6xl mx-auto w-full relative z-10 flex flex-col items-start space-y-12">
+          <div className="flex flex-wrap gap-3">
+            <Badge className="hero-badge" text="DETERMINISTIC POLICY" />
+            <Badge className="hero-badge" text="BEHAVIORAL ANOMALY DETECTION" />
+            <Badge className="hero-badge" text="INSTRUCTION PROVENANCE" />
+            <Badge className="hero-badge" text="TAMPER-EVIDENT AUDIT" />
+          </div>
+          
+          <h1 className="hero-headline font-general text-6xl md:text-[clamp(3.5rem,8vw,7rem)] font-extrabold tracking-tighter text-black leading-[0.95] max-w-5xl">
+            An AI agent can be fully authorized to pay and still be hijacked.
+          </h1>
+          
+          <p className="hero-subtext text-xl md:text-[1.25rem] text-black/80 max-w-3xl leading-[1.6] font-medium">
+            Because traditional authorization checks <em>what</em> was decided, not <em>why</em>. Agent Spend Governor is the missing defense layer between autonomous agents and RazorpayX.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-6 pt-8">
+            <Link
+              href="/dashboard"
+              className="primary-btn hero-btn px-10 py-5 bg-black text-[#FDE68A] font-bold transition-colors flex items-center space-x-3 text-sm tracking-widest uppercase rounded-sm"
+            >
+              <span>View Live Dashboard</span>
+              <ArrowRight className="arrow-icon w-5 h-5" />
+            </Link>
+            <a
+              href="https://github.com/jyotirmya17/razorpay-agent-spend-governor"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hero-btn px-10 py-5 bg-transparent hover:bg-black/5 border-2 border-black text-black font-bold transition-colors text-sm tracking-widest uppercase rounded-sm"
+            >
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. THE PROBLEM */}
+      <section className="problem-section px-6 py-40 border-b border-black/10">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-12 font-bold opacity-60">The Problem</h2>
+          <p className="text-3xl md:text-5xl lg:text-6xl text-black/20 leading-tight font-medium font-general tracking-tight">
+            <span className="problem-line transition-colors duration-300 block mb-2">Imagine an authorized AI agent reading an untrusted invoice. </span>
+            <span className="problem-line transition-colors duration-300 block mb-2">An invisible prompt injection redirects the payment instruction to an attacker's account. </span>
+            <span className="problem-line transition-colors duration-300 block mb-2">Every field looks structurally normal. </span>
+            <span className="problem-line transition-colors duration-300 block mb-2">Traditional controls—maker-checker flows, budgets, and card limits—will miss this attack </span>
+            <span className="problem-line transition-colors duration-300 block mb-2">because none of them verify the <em className="not-italic">origin</em> of the instruction payload.</span>
           </p>
         </div>
+      </section>
 
-        <div className="mt-4 pt-4 border-t border-[#232B36]/60 flex items-center justify-between text-xs font-mono text-slate-400">
-          <div className="flex items-center space-x-4">
-            <span>Isolation Forest Anomaly Detection</span>
-            <span>•</span>
-            <span>SHA-256 Tamper-Evident Audit Chain</span>
-            <span>•</span>
-            <span>RazorpayX Test Mode Gate</span>
-          </div>
-          <Link
-            href="/demo"
-            className="px-3 py-1.5 bg-[#3395FF] hover:bg-[#2575d6] text-white font-bold rounded-lg transition-colors flex items-center space-x-1.5 text-xs"
-          >
-            <span>Open Governance Scenarios</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+      {/* 3. ARCHITECTURE */}
+      <section className="px-6 py-32 border-b border-black/10">
+        <div className="max-w-5xl mx-auto gsap-reveal">
+          <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-16 text-center font-bold opacity-60">System Architecture</h2>
+          <ArchitectureDiagram />
         </div>
-      </div>
+      </section>
 
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-mono text-red-400">
-          ✕ Backend API Error: {error}
-        </div>
-      )}
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-4 gap-4">
-        {/* Total Agents */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>TOTAL AGENTS</span>
-            <Users className="w-4 h-4 text-[#3395FF]" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-white font-mono tabular-nums">
-              {stats?.total_agents || 0}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Active governed agent profiles</p>
-          </div>
-        </div>
-
-        {/* Active Mandates */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>ACTIVE MANDATES</span>
-            <Shield className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-white font-mono tabular-nums">
-              {stats?.active_mandates || 0}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Enforced spend policies</p>
-          </div>
-        </div>
-
-        {/* Governed Amount */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>GOVERNED AMOUNT</span>
-            <CreditCard className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-emerald-400 font-mono tabular-nums">
-              ₹{(stats?.governed_amount_inr || 0).toLocaleString()}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">
-              Total transaction volume processed
-            </p>
-          </div>
-        </div>
-
-        {/* Total Transactions */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>TOTAL EVALUATIONS</span>
-            <Activity className="w-4 h-4 text-[#3395FF]" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-white font-mono tabular-nums">
-              {stats?.total_transactions || 0}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Governor decisions logged</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Decision Breakdown Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[#11161D] border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase text-slate-400">ALLOW Decisions</span>
-            <p className="text-xl font-bold text-emerald-400 font-mono mt-1 tabular-nums">
-              {stats?.decisions?.ALLOW || 0}
-            </p>
-          </div>
-          <CheckCircle2 className="w-8 h-8 text-emerald-400/80" />
-        </div>
-
-        <div className="bg-[#11161D] border border-amber-500/20 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase text-slate-400">FLAG Decisions</span>
-            <p className="text-xl font-bold text-amber-400 font-mono mt-1 tabular-nums">
-              {stats?.decisions?.FLAG || 0}
-            </p>
-          </div>
-          <AlertTriangle className="w-8 h-8 text-amber-400/80" />
-        </div>
-
-        <div className="bg-[#11161D] border border-red-500/20 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase text-slate-400">BLOCK Decisions</span>
-            <p className="text-xl font-bold text-red-400 font-mono mt-1 tabular-nums">
-              {stats?.decisions?.BLOCK || 0}
-            </p>
-          </div>
-          <XCircle className="w-8 h-8 text-red-400/80" />
-        </div>
-      </div>
-
-      {/* Pipeline Diagram */}
-      <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-            Governor Orchestration Pipeline Architecture
-          </h3>
-          <span className="text-[10px] font-mono text-slate-400">
-            Single entry point: POST /v1/payouts
-          </span>
-        </div>
-
-        <div className="grid grid-cols-6 gap-2 pt-2">
-          {[
-            { step: "REQUEST", label: "Agent Payout Intent", desc: "Agent ID, Amount, Payee, Provenance" },
-            { step: "POLICY", label: "Mandate Engine", desc: "Deterministic daily/weekly/txn caps" },
-            { step: "BEHAVIOR", label: "Anomaly Model", desc: "Isolation Forest risk scoring" },
-            { step: "PROVENANCE", label: "Trust Evaluator", desc: "Payment origin trust classification" },
-            { step: "DECISION", label: "Precedence Gate", desc: "ALLOW / FLAG / BLOCK reason aggregation" },
-            { step: "EXECUTION", label: "RazorpayX Execution", desc: "Strict execution gate (ALLOW only)" },
-          ].map((item, idx) => (
-            <div
-              key={item.step}
-              className="bg-[#171D25] border border-[#232B36] rounded-lg p-3 relative flex flex-col justify-between"
-            >
-              <div>
-                <span className="text-[10px] font-mono text-[#3395FF] font-bold block">
-                  0{idx + 1}. {item.step}
-                </span>
-                <p className="text-xs font-bold text-white mt-1">{item.label}</p>
+      {/* 4. THE VIDEO */}
+      <section id="demo-video" className="px-6 py-32 border-b border-black/10">
+        <div className="max-w-5xl mx-auto gsap-reveal">
+          <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-10 text-center font-bold opacity-60">Demo Walkthrough</h2>
+          <div className="aspect-video w-full bg-black border border-black/20 overflow-hidden relative flex items-center justify-center group shadow-2xl rounded-sm">
+            {LOOM_EMBED_URL !== "REPLACE_ME" ? (
+              <iframe 
+                src={LOOM_EMBED_URL} 
+                frameBorder="0" 
+                allowFullScreen 
+                className="absolute inset-0 w-full h-full"
+              ></iframe>
+            ) : (
+              <div className="text-white/40 flex flex-col items-center space-y-6">
+                <PlayCircle className="w-20 h-20 opacity-30 group-hover:opacity-100 group-hover:text-[#FDE68A] transition-all cursor-pointer" />
+                <span className="font-mono text-xs uppercase tracking-widest text-white/50">Loom Embed Placeholder</span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono mt-2">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Live Governance Feed */}
-      <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-            Live Governance Stream (Real Transactions)
-          </h3>
-          <Link
-            href="/transactions"
-            className="text-xs text-[#3395FF] hover:underline font-mono flex items-center space-x-1"
-          >
-            <span>View All Transactions</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {recentTxns.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 font-mono text-xs border border-dashed border-[#232B36] rounded-lg">
-            No transactions processed yet. Run a scenario in Governance Scenarios to seed activity.
+            )}
           </div>
-        ) : (
-          <div className="space-y-2">
-            {recentTxns.map((t) => (
-              <div
-                key={t.txn_id}
-                className="bg-[#171D25] border border-[#232B36] hover:border-[#3395FF]/30 transition-colors p-3 rounded-lg flex items-center justify-between text-xs font-mono"
-              >
-                <div className="flex items-center space-x-4">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      t.decision === "ALLOW"
-                        ? "bg-emerald-400"
-                        : t.decision === "FLAG"
-                        ? "bg-amber-400"
-                        : "bg-red-400"
-                    }`}
-                  />
-                  <div>
-                    <span className="font-bold text-white">{t.txn_id}</span>
-                    <span className="text-slate-500 text-[10px] ml-2">
-                      Agent: <strong className="text-slate-300">{t.agent_id}</strong>
-                    </span>
-                  </div>
-                </div>
+        </div>
+      </section>
 
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">PAYEE / CAT</span>
-                    <span className="text-slate-300">
-                      {t.payee_id} ({t.category})
-                    </span>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">AMOUNT</span>
-                    <span className="text-emerald-400 font-bold">₹{t.amount_inr}</span>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">DECISION</span>
-                    <span
-                      className={`font-bold px-2 py-0.5 rounded text-[10px] ${
-                        t.decision === "ALLOW"
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : t.decision === "FLAG"
-                          ? "bg-amber-500/10 text-amber-400"
-                          : "bg-red-500/10 text-red-400"
-                      }`}
-                    >
-                      {t.decision}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* 5. THE HONEST FINDING */}
+      <section className="px-6 py-32 border-b border-black/10">
+        <div className="max-w-4xl mx-auto text-center gsap-reveal">
+          <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-10 font-bold opacity-60">The Honest Finding: Rules vs ML</h2>
+          <div className="p-10 border-2 border-black shadow-[8px_8px_0_0_#000] bg-[#FDE68A] rounded-sm">
+            <p className="text-xl md:text-3xl text-black leading-relaxed text-left font-semibold font-general tracking-tight">
+              A simple deterministic rules baseline currently beats the ML model on aggregate cost. Evaluating over historical distributions, rigid caps stop simple over-spend more cheaply. The true value of the ML layer is not in broad statistical coverage, but in acting as a safety net against <strong className="font-extrabold underline decoration-4 underline-offset-4">adversarial, multi-signal attacks</strong>—like a hijacked agent splitting a large illicit payload across multiple small, varied transactions that individually bypass static rule caps.
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
+
+      {/* 6. STAT STRIP */}
+      <section className="px-6 py-32 border-b border-black/10">
+        <div className="max-w-6xl mx-auto gsap-reveal">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-0 border-2 border-black rounded-sm overflow-hidden shadow-[8px_8px_0_0_#000]">
+            <StatCounter title="Tests Passing" value={125} suffix="/125" />
+            <StatCounter title="Audit Chain" value={256} prefix="SHA-" />
+            <StatCounter title="Database Lock" value={1} prefix="ROW LEVEL " suffix="X" />
+            <StatCounter title="ML Evaluation" value={100} suffix="% HELD OUT" />
+          </div>
+        </div>
+      </section>
+
+      {/* 7. FOOTER */}
+      <footer className="px-6 py-16 text-center space-y-8 gsap-reveal">
+        <div className="flex justify-center space-x-10 text-xs font-mono uppercase tracking-widest font-bold">
+          <Link href="/dashboard" className="text-black/60 hover:text-black transition-colors">Dashboard Console</Link>
+          <a href="https://github.com/jyotirmya17/razorpay-agent-spend-governor" target="_blank" rel="noopener noreferrer" className="text-black/60 hover:text-black transition-colors">GitHub Repository</a>
+        </div>
+        <p className="text-xs text-black/40 font-mono font-medium">
+          Built for Razorpay AI Buildathon 2026 — AI Risk Manager track.
+        </p>
+      </footer>
     </div>
+  );
+}
+
+function Badge({ text, className = "" }: { text: string, className?: string }) {
+  return (
+    <span className={`px-4 py-2 border-2 border-black bg-[#FDE68A] text-[11px] font-mono font-bold tracking-widest text-black uppercase rounded-sm ${className}`}>
+      {text}
+    </span>
   );
 }

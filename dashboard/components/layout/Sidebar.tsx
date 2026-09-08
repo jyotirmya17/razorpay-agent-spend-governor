@@ -21,13 +21,13 @@ import { api } from "@/lib/api";
 import { SystemHealth } from "@/lib/types";
 
 const NAV_ITEMS = [
-  { name: "Overview", href: "/", icon: LayoutDashboard },
-  { name: "Agents", href: "/agents", icon: Users },
-  { name: "Mandates", href: "/mandates", icon: Shield },
-  { name: "Transactions", href: "/transactions", icon: CreditCard },
-  { name: "Risk", href: "/risk", icon: AlertTriangle },
-  { name: "Audit Trail", href: "/audit", icon: FileCheck },
-  { name: "Governance Scenarios", href: "/demo", icon: PlayCircle },
+  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Agents", href: "/dashboard/agents", icon: Users },
+  { name: "Mandates", href: "/dashboard/mandates", icon: Shield },
+  { name: "Transactions", href: "/dashboard/transactions", icon: CreditCard },
+  { name: "Risk", href: "/dashboard/risk", icon: AlertTriangle },
+  { name: "Audit Trail", href: "/dashboard/audit", icon: FileCheck },
+  { name: "Governance Scenarios", href: "/dashboard/demo", icon: PlayCircle },
 ];
 
 export function Sidebar() {
@@ -83,8 +83,8 @@ export function Sidebar() {
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
+              item.href === "/dashboard"
+                ? pathname === "/dashboard" || pathname === "/dashboard/"
                 : pathname.startsWith(item.href);
 
             return (
