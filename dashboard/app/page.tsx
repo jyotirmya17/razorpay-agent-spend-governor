@@ -218,8 +218,8 @@ export default function LandingPage() {
           <Link href="/dashboard" className="text-black/60 hover:text-black transition-colors">Dashboard Console</Link>
           <a href="https://github.com/jyotirmya17/razorpay-agent-spend-governor" target="_blank" rel="noopener noreferrer" className="text-black/60 hover:text-black transition-colors">GitHub Repository</a>
         </div>
-        <p className="text-xs text-black/40 font-mono font-medium">
-          Built for Razorpay AI Buildathon 2026 — AI Risk Manager track.
+        <p className="text-[#888888]">
+          &copy; {new Date().getFullYear()} Spend Governor. All rights reserved.
         </p>
       </footer>
     </div>
