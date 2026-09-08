@@ -67,6 +67,7 @@ export default function LandingPage() {
           gsap.set(split.lines, { opacity: 0.15, color: "#000000" });
           gsap.to(split.lines, {
             opacity: 1,
+            fontWeight: 900,
             stagger: 0.1,
             scrollTrigger: {
               trigger: ".problem-section",
