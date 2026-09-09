@@ -152,7 +152,10 @@ export default function LandingPage() {
       <section className="problem-section px-6 py-40 border-b border-black/10">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-12 font-bold opacity-60">The Problem</h2>
-          <p className="problem-text text-3xl md:text-5xl lg:text-[3.25rem] text-black text-justify leading-[1.2] font-medium font-general tracking-tight">
+          <p 
+            className="problem-text text-3xl md:text-5xl lg:text-[3.25rem] text-black text-justify leading-[1.2] font-medium font-general tracking-tight hyphens-auto"
+            style={{ maxWidth: '60ch', textJustify: 'inter-word', textWrap: 'pretty' }}
+          >
             Imagine an authorized AI agent reading an untrusted invoice. An invisible prompt injection redirects the payment instruction to an attacker's account. Every field looks structurally normal. Traditional controls—maker-checker flows, budgets, and card limits—will miss this attack because none of them verify the origin of the instruction payload.
           </p>
         </div>
