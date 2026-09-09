@@ -52,3 +52,10 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+.problem-split-line {
+  text-align-last: justify;
+}
+.problem-split-line:last-child {
+  text-align-last: left;
+}

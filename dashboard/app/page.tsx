@@ -61,7 +61,7 @@ export default function LandingPage() {
       
       if (problemText) {
         // Automatically splits the paragraph into visual DOM lines
-        split = new SplitType(problemText as HTMLElement, { types: 'lines', lineClass: 'split-line' });
+        split = new SplitType(problemText as HTMLElement, { types: 'lines', lineClass: 'problem-split-line' });
         
         if (split.lines && split.lines.length > 0) {
           gsap.set(split.lines, { 
