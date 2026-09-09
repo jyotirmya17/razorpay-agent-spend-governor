@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 
 interface RiskSignalsBreakdownProps {
   features: Record<string, number>;
@@ -36,41 +36,41 @@ export function RiskSignalsBreakdown({ features, anomalyScore }: RiskSignalsBrea
   return (
     <div className="space-y-6">
       {/* Risk Score Summary Banner */}
-      <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 flex items-center justify-between">
+      <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 flex items-center justify-between">
         <div>
-          <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-black bg-black/5 px-2 py-1 border-2 border-black">
             Current Isolation Forest Anomaly Score
           </span>
-          <div className="flex items-baseline space-x-3 mt-1">
+          <div className="flex items-baseline space-x-4 mt-4">
             <span
-              className={`text-3xl font-bold font-mono ${
-                (anomalyScore ?? 0) >= 0.42 ? "text-amber-400" : "text-emerald-400"
+              className={`text-4xl font-bold font-mono px-3 py-1 border-2 shadow-[4px_4px_0_0_#000] ${
+                (anomalyScore ?? 0) >= 0.42 ? "border-amber-500 text-amber-600 bg-[#FDFBF7]" : "border-green-500 text-green-600 bg-[#FDFBF7]"
               }`}
             >
               {anomalyScore !== null && anomalyScore !== undefined ? anomalyScore.toFixed(3) : "N/A"}
             </span>
-            <span className="text-xs font-mono text-slate-400">
-              Threshold: <span className="text-white font-bold">0.420</span> (FLAG trigger)
+            <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60">
+              Threshold: <span className="text-black bg-black/10 px-1">0.420</span> (FLAG trigger)
             </span>
           </div>
         </div>
 
         <div className="text-right">
           <span
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono border inline-flex items-center space-x-1.5 ${
+            className={`px-4 py-2 text-xs font-bold font-mono border-2 shadow-[4px_4px_0_0_#000] inline-flex items-center space-x-2 ${
               (anomalyScore ?? 0) >= 0.42
-                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                ? "border-amber-500 text-amber-600 bg-[#FDFBF7]"
+                : "border-green-500 text-green-600 bg-[#FDFBF7]"
             }`}
           >
             {(anomalyScore ?? 0) >= 0.42 ? (
               <>
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-4 h-4" />
                 <span>BEHAVIORAL ANOMALY DETECTED</span>
               </>
             ) : (
               <>
-                <CheckCircle className="w-3.5 h-3.5" />
+                <CheckCircle className="w-4 h-4" />
                 <span>NORMAL BEHAVIOR PROFILE</span>
               </>
             )}
@@ -80,29 +80,29 @@ export function RiskSignalsBreakdown({ features, anomalyScore }: RiskSignalsBrea
 
       {/* High-Risk Signals Section */}
       {highRiskSignals.length > 0 && (
-        <div>
-          <h4 className="text-xs font-bold text-amber-400 font-mono uppercase tracking-wider mb-3 flex items-center space-x-1.5">
-            <AlertTriangle className="w-3.5 h-3.5" />
+        <div className="bg-black/5 border-2 border-black p-6 shadow-[6px_6px_0_0_#000]">
+          <h4 className="text-xs font-bold text-amber-500 font-mono uppercase tracking-widest mb-4 flex items-center space-x-2 bg-amber-100 border-2 border-amber-500 px-3 py-1.5 inline-flex">
+            <AlertTriangle className="w-4 h-4" />
             <span>Elevated Risk Signals ({highRiskSignals.length})</span>
           </h4>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {highRiskSignals.map(([key, val]) => (
               <div
                 key={key}
-                className="bg-[#171D25] border border-amber-500/30 rounded-lg p-3 space-y-1.5"
+                className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-4 space-y-3"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold font-mono text-white">{key}</span>
-                  <span className="text-xs font-bold font-mono text-amber-400">
+                <div className="flex items-center justify-between border-b-2 border-black/10 pb-2">
+                  <span className="text-xs font-bold font-mono text-black uppercase tracking-widest">{key}</span>
+                  <span className="text-xs font-bold font-mono bg-[#FDFBF7] text-amber-600 px-2 border-2 border-amber-500 shadow-[2px_2px_0_0_#000]">
                     {val.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-mono">
+                <p className="text-[10px] text-black/60 font-bold font-mono uppercase tracking-widest">
                   {SIGNAL_DESCRIPTIONS[key] || "Canonical behavioral signal"}
                 </p>
-                <div className="w-full bg-[#0B0F14] h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-black/10 border-2 border-black h-3">
                   <div
-                    className="bg-amber-500 h-full rounded-full"
+                    className="bg-amber-400 h-full border-r-2 border-black"
                     style={{ width: `${Math.min(100, Math.max(10, val * 100))}%` }}
                   />
                 </div>
@@ -113,22 +113,22 @@ export function RiskSignalsBreakdown({ features, anomalyScore }: RiskSignalsBrea
       )}
 
       {/* Normal Signals Section */}
-      <div>
-        <h4 className="text-xs font-bold text-slate-400 font-mono uppercase tracking-wider mb-3 flex items-center space-x-1.5">
-          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+      <div className="bg-[#FDFBF7] border-2 border-black p-6 shadow-[6px_6px_0_0_#000]">
+        <h4 className="text-xs font-bold text-green-600 font-mono uppercase tracking-widest mb-4 flex items-center space-x-2 bg-[#FDFBF7] border-2 border-green-500 px-3 py-1.5 inline-flex shadow-[2px_2px_0_0_#22c55e]">
+          <CheckCircle className="w-4 h-4" />
           <span>Baseline Signals ({normalSignals.length})</span>
         </h4>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-4">
           {normalSignals.map(([key, val]) => (
             <div
               key={key}
-              className="bg-[#11161D] border border-[#232B36] rounded-lg p-3 space-y-1"
+              className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-4 space-y-2 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] transition-all"
             >
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-300 truncate pr-1">{key}</span>
-                <span className="text-emerald-400 font-bold">{val.toFixed(2)}</span>
+              <div className="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest border-b-2 border-black/10 pb-2">
+                <span className="text-black/80 truncate pr-2">{key}</span>
+                <span className="text-black bg-black/5 px-1 border-2 border-black">{val.toFixed(2)}</span>
               </div>
-              <p className="text-[9px] text-slate-500 font-mono truncate">
+              <p className="text-[9px] text-black/50 font-bold font-mono uppercase tracking-widest truncate">
                 {SIGNAL_DESCRIPTIONS[key] || "Canonical signal"}
               </p>
             </div>

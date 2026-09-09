@@ -14,7 +14,7 @@ type ScenarioId = 'clean' | 'spoofed' | 'velocity';
 export default function ArchitectureDiagram() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
-  const [caption, setCaption] = useState("Select a test scenario below to initiate the deterministic Governor pipeline.");
+  const [caption, setCaption] = useState("Select a governance scenario below to initiate the deterministic Governor pipeline.");
   const [activeScenario, setActiveScenario] = useState<ScenarioId | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -256,7 +256,7 @@ export default function ArchitectureDiagram() {
         </div>
 
         {/* GOVERNOR BOX */}
-        <div className="absolute left-[200px] top-[35px] w-[320px] h-[280px] border-2 border-black bg-[#FDFBF7] z-10 shadow-[8px_8px_0_0_#000] flex flex-col items-start pt-[28px] pl-[60px] space-y-[26px]">
+        <div className="absolute left-[200px] top-[35px] w-[320px] h-[280px] border-2 border-black bg-[#FDFBF7] z-10 shadow-[8px_8px_0_0_#000] flex flex-col items-start pt-[32px] pl-[60px] space-y-[34px]">
           <div className="absolute -top-[12px] left-[16px] bg-[#FDFBF7] border-2 border-black px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-widest text-black">
             Agent Spend Governor
           </div>

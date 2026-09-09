@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { AuditVerificationResult } from "@/lib/types";
-import { ShieldCheck, ShieldAlert, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldCheck, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
 
 export function AuditVerifierButton() {
   const [loading, setLoading] = useState(false);
@@ -24,31 +24,31 @@ export function AuditVerifierButton() {
   };
 
   return (
-    <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5">
-      <div className="flex items-center justify-between">
+    <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 space-y-6">
+      <div className="flex items-center justify-between border-b-2 border-black pb-4">
         <div>
-          <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center space-x-2">
-            <ShieldCheck className="w-4 h-4 text-[#3395FF]" />
+          <h3 className="text-sm font-bold text-black font-mono uppercase tracking-widest flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-black" />
             <span>Cryptographic Audit Chain Verifier</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-1">
-            Verifies SHA-256 hash-link sequence integrity across all PostgreSQL audit events.
+          <p className="text-xs text-black/60 font-mono font-bold tracking-widest mt-1 uppercase">
+            Verifies SHA-256 hash-link sequence integrity
           </p>
         </div>
 
         <button
           onClick={handleVerify}
           disabled={loading}
-          className="px-4 py-2 bg-[#3395FF] hover:bg-[#2575d6] text-white font-mono font-bold text-xs rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50"
+          className="px-4 py-2 bg-black hover:bg-[#FDFBF7] text-[#FDFBF7] hover:text-black border-2 border-black font-mono font-bold text-xs uppercase tracking-widest shadow-[4px_4px_0_0_#000] hover:shadow-none hover:translate-y-1 transition-all flex items-center space-x-2 disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-[#FDFBF7] disabled:hover:shadow-[4px_4px_0_0_#000] disabled:hover:translate-y-0"
         >
           {loading ? (
             <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Verifying SHA-256 Hashes...</span>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span>Verifying Hashes...</span>
             </>
           ) : (
             <>
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-4 h-4" />
               <span>VERIFY AUDIT INTEGRITY</span>
             </>
           )}
@@ -56,51 +56,51 @@ export function AuditVerifierButton() {
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-mono text-red-400">
+        <div className="p-4 bg-[#FDFBF7] text-red-600 border-2 border-red-500 shadow-[4px_4px_0_0_#ef4444] text-xs font-mono font-bold uppercase tracking-widest">
           ✕ Verification Error: {error}
         </div>
       )}
 
       {result && (
-        <div className="mt-4 pt-4 border-t border-[#232B36] space-y-3 font-mono text-xs">
+        <div className="space-y-4 font-mono font-bold uppercase tracking-widest text-xs">
           {result.valid ? (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-between text-emerald-400">
-              <div className="flex items-center space-x-2 font-bold">
-                <CheckCircle2 className="w-4 h-4" />
+            <div className="p-4 bg-[#FDFBF7] text-green-600 border-2 border-green-500 shadow-[4px_4px_0_0_#22c55e] flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="w-5 h-5" />
                 <span>✓ AUDIT CHAIN VALID — NO TAMPERING DETECTED</span>
               </div>
-              <span className="text-[10px] text-emerald-500">
+              <span className="text-[10px] bg-black text-[#FDFBF7] px-2 py-1 border-2 border-black">
                 {result.events_checked} Events Verified
               </span>
             </div>
           ) : (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-between text-red-400">
-              <div className="flex items-center space-x-2 font-bold">
-                <XCircle className="w-4 h-4" />
+            <div className="p-4 bg-[#FDFBF7] text-red-600 border-2 border-red-500 shadow-[4px_4px_0_0_#ef4444] flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <XCircle className="w-5 h-5" />
                 <span>✕ AUDIT CHAIN INVALID / TAMPERED</span>
               </div>
-              <span className="text-[10px] text-red-500">
+              <span className="text-[10px] bg-black text-[#FDFBF7] px-2 py-1 border-2 border-black">
                 Failed at Sequence #{result.failed_sequence_id}
               </span>
             </div>
           )}
 
-          <div className="grid grid-cols-4 gap-3 text-[11px] text-slate-400 bg-[#171D25] p-3 rounded-lg border border-[#232B36]">
-            <div>
-              <span className="block text-slate-500 text-[10px]">TOTAL EVENTS</span>
-              <span className="text-white font-bold">{result.events_checked}</span>
+          <div className="grid grid-cols-4 gap-4 text-[10px] text-black bg-black/5 p-4 border-2 border-black shadow-[4px_4px_0_0_#000]">
+            <div className="border-r-2 border-black/10">
+              <span className="block text-black/50 mb-1">TOTAL EVENTS</span>
+              <span className="text-black text-xs">{result.events_checked}</span>
             </div>
-            <div>
-              <span className="block text-slate-500 text-[10px]">FIRST SEQUENCE</span>
-              <span className="text-white font-bold">#{result.first_sequence_id ?? 1}</span>
+            <div className="border-r-2 border-black/10 pl-4">
+              <span className="block text-black/50 mb-1">FIRST SEQUENCE</span>
+              <span className="text-black text-xs">#{result.first_sequence_id ?? 1}</span>
             </div>
-            <div>
-              <span className="block text-slate-500 text-[10px]">LAST SEQUENCE</span>
-              <span className="text-white font-bold">#{result.last_sequence_id ?? result.events_checked}</span>
+            <div className="border-r-2 border-black/10 pl-4">
+              <span className="block text-black/50 mb-1">LAST SEQUENCE</span>
+              <span className="text-black text-xs">#{result.last_sequence_id ?? result.events_checked}</span>
             </div>
-            <div>
-              <span className="block text-slate-500 text-[10px]">CHAIN STATUS</span>
-              <span className={result.valid ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>
+            <div className="pl-4">
+              <span className="block text-black/50 mb-1">CHAIN STATUS</span>
+              <span className={`text-xs ${result.valid ? "text-green-600" : "text-red-600"}`}>
                 {result.valid ? "INTACT" : "CORRUPTED"}
               </span>
             </div>

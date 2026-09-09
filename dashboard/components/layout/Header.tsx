@@ -3,34 +3,33 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ShieldCheck, RefreshCw, Cpu } from "lucide-react";
-import { api } from "@/lib/api";
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
-  "/": {
+  "/dashboard": {
     title: "Overview",
     subtitle: "Real-time agent payout governance console",
   },
-  "/agents": {
+  "/dashboard/agents": {
     title: "Agents & Authority",
     subtitle: "Active agent profiles, mandates & spend limits",
   },
-  "/mandates": {
+  "/dashboard/mandates": {
     title: "Mandate Policies",
     subtitle: "Policy rules, daily/weekly caps & revocation control",
   },
-  "/transactions": {
+  "/dashboard/transactions": {
     title: "Transactions",
     subtitle: "Decision pipeline investigation log",
   },
-  "/risk": {
+  "/dashboard/risk": {
     title: "Risk Command Center",
     subtitle: "Isolation Forest anomaly scores & feature signals",
   },
-  "/audit": {
+  "/dashboard/audit": {
     title: "Audit Trail",
     subtitle: "Cryptographic SHA-256 tamper-evident event log",
   },
-  "/demo": {
+  "/dashboard/demo": {
     title: "Governance Scenarios",
     subtitle: "Interactive evaluator scenario test suite",
   },
@@ -64,38 +63,37 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 border-b border-[#232B36] bg-[#11161D]/80 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-10">
+    <header className="h-20 border-b-2 border-black bg-[#FDFBF7] px-8 flex items-center justify-between sticky top-0 z-10">
       <div>
-        <h1 className="text-base font-bold text-white tracking-tight flex items-center space-x-2">
-          <span>{pageInfo.title}</span>
+        <h1 className="text-2xl font-bold text-black tracking-tight uppercase font-mono">
+          {pageInfo.title}
         </h1>
-        <p className="text-[11px] text-slate-400 font-normal">
+        <p className="text-[11px] text-black/60 font-bold font-mono tracking-widest uppercase mt-1">
           {pageInfo.subtitle}
         </p>
       </div>
 
       <div className="flex items-center space-x-4">
         {/* Environment Badge */}
-        <div className="flex items-center space-x-2 px-2.5 py-1 rounded bg-[#171D25] border border-[#232B36] text-[11px]">
-          <Cpu className="w-3.5 h-3.5 text-[#3395FF]" />
-          <span className="text-slate-300 font-medium">Mode:</span>
-          <span className="font-mono text-emerald-400 font-bold">TEST_MODE</span>
+        <div className="flex items-center space-x-2 px-3 py-1.5 border-2 border-black bg-black text-[#FDFBF7] shadow-[2px_2px_0_0_#000] text-[10px] font-mono font-bold tracking-widest uppercase">
+          <Cpu className="w-3.5 h-3.5 text-[#FDFBF7]" />
+          <span>Mode: TEST_MODE</span>
         </div>
 
         {/* Sync Indicator */}
         <button
           onClick={handleManualRefresh}
-          className="flex items-center space-x-2 px-2.5 py-1 rounded bg-[#171D25] hover:bg-[#232B36] border border-[#232B36] text-[11px] text-slate-300 transition-colors"
+          className="flex items-center space-x-2 px-3 py-1.5 border-2 border-black bg-[#FDFBF7] text-black hover:bg-black hover:text-[#FDFBF7] shadow-[2px_2px_0_0_#000] text-[10px] font-mono font-bold tracking-widest uppercase transition-colors"
           title="Refresh Data"
         >
-          <RefreshCw className={`w-3 h-3 text-slate-400 ${isRefreshing ? "animate-spin" : ""}`} />
-          <span className="font-mono text-slate-400 text-[10px]">
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+          <span>
             {lastSync ? `Sync ${lastSync}` : "Syncing..."}
           </span>
         </button>
 
         {/* Status Security Badge */}
-        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
+        <div className="flex items-center space-x-2 px-3 py-1.5 border-2 border-green-500 bg-[#FDFBF7] text-green-600 shadow-[2px_2px_0_0_#22c55e] text-[10px] font-mono font-bold tracking-widest uppercase">
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Governor Active</span>
         </div>

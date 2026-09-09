@@ -1,4 +1,4 @@
-export type DecisionType = "ALLOW" | "FLAG" | "BLOCK" | "IDEMPOTENT_REPLAY" | "UNKNOWN";
+export type DecisionType = "ALLOW" | "FLAG" | "BLOCK" | "IDEMPOTENT_REPLAY" | "UNKNOWN" | "SUCCEEDED";
 
 export type SourceTrust = "TRUSTED" | "UNTRUSTED" | "UNKNOWN";
 

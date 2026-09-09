@@ -12,7 +12,7 @@ import StatCounter from "@/components/landing/StatCounter";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const LOOM_EMBED_URL = "https://www.loom.com/embed/500a29da79074e878ec80e008de7727e";
+const LOOM_EMBED_URL: string = "https://www.loom.com/embed/500a29da79074e878ec80e008de7727e";
 
 export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -163,6 +163,46 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto gsap-reveal">
           <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-16 text-center font-bold opacity-60">System Architecture</h2>
           <ArchitectureDiagram />
+        </div>
+      </section>
+
+      {/* 3.5 WHERE TO LOOK FIRST */}
+      <section className="px-6 py-32 border-b border-black/10 bg-[#FDFBF7]">
+        <div className="max-w-5xl mx-auto gsap-reveal">
+          <h2 className="text-sm font-mono text-black uppercase tracking-widest mb-16 font-bold opacity-60 text-center">Where to Look First</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            
+            <div className="border-t-4 border-amber-500 pt-6">
+              <span className="text-4xl font-extrabold font-general text-amber-500/20 block mb-4">01</span>
+              <h3 className="text-lg font-bold font-general text-black mb-3">Governance Scenarios</h3>
+              <p className="text-sm font-mono text-black/70 leading-relaxed">
+                Use the sidebar to navigate to Governance Scenarios — watch a payout get Allowed, Flagged, or Blocked live.
+              </p>
+            </div>
+            
+            <div className="border-t-4 border-amber-500 pt-6">
+              <span className="text-4xl font-extrabold font-general text-amber-500/20 block mb-4">02</span>
+              <h3 className="text-lg font-bold font-general text-black mb-3">Audit Trail Page</h3>
+              <p className="text-sm font-mono text-black/70 leading-relaxed">
+                Check the tamper-evident decision log to see immutable, cryptographically-hashed decision logs.
+              </p>
+            </div>
+            
+            <div className="border-t-4 border-amber-500 pt-6">
+              <span className="text-4xl font-extrabold font-general text-amber-500/20 block mb-4">03</span>
+              <h3 className="text-lg font-bold font-general text-black mb-3">Provenance / Injection</h3>
+              <p className="text-sm font-mono text-black/70 leading-relaxed">
+                The provenance/injection scenario is the core differentiator — look for it specifically.
+              </p>
+            </div>
+
+          </div>
+          <div className="mt-16 text-center">
+            <a href="https://github.com/jyotirmya17/razorpay-agent-spend-governor#where-to-look-first" target="_blank" rel="noopener noreferrer" className="text-sm font-mono font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-2 border-amber-500/30 px-6 py-3 transition-colors inline-flex items-center space-x-3 rounded-sm uppercase tracking-widest">
+              <span>Detailed guide</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </section>
 

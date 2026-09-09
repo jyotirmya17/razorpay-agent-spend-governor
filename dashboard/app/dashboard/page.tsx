@@ -11,13 +11,11 @@ import {
   XCircle,
   Activity,
   ArrowRight,
-  ShieldCheck,
-  RefreshCw,
-  Zap,
+  Info,
+  CheckSquare
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { OverviewStats, TransactionSummary, SystemHealth } from "@/lib/types";
-import { ProvenanceBadge } from "@/components/governance/ProvenanceBadge";
 
 export default function OverviewPage() {
   const [stats, setStats] = useState<OverviewStats | null>(null);
@@ -57,10 +55,10 @@ export default function OverviewPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="animate-pulse bg-[#11161D] h-32 rounded-xl border border-[#232B36]" />
+        <div className="animate-pulse bg-[#FDFBF7] h-32 border-2 border-black shadow-[4px_4px_0_0_#000]" />
         <div className="grid grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse bg-[#11161D] h-24 rounded-xl border border-[#232B36]" />
+            <div key={i} className="animate-pulse bg-[#FDFBF7] h-24 border-2 border-black shadow-[4px_4px_0_0_#000]" />
           ))}
         </div>
       </div>
@@ -68,238 +66,259 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Hero & Core Thesis Card */}
-      <div className="bg-gradient-to-r from-[#11161D] via-[#171D25] to-[#11161D] border border-[#232B36] rounded-xl p-6 relative overflow-hidden">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="text-2xl font-bold text-white tracking-tight font-mono">
+    <div className="space-y-8 pb-12">
+      {/* Intro for Judges - Explaining the Product clearly */}
+      <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 lg:p-8 flex flex-col lg:flex-row gap-8 justify-between relative overflow-hidden">
+        <div className="max-w-3xl space-y-4">
+          <div className="inline-flex items-center space-x-2 bg-black text-[#FDFBF7] px-3 py-1 text-xs font-mono font-bold uppercase tracking-widest border-2 border-black shadow-[2px_2px_0_0_#000]">
+            <Shield className="w-3.5 h-3.5" />
+            <span>Razorpay AI Buildathon 2026</span>
+          </div>
+          <h2 className="text-3xl lg:text-4xl font-bold text-black tracking-tight font-mono uppercase">
             Agent Spend Governor
           </h2>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            <strong className="text-white">Core Thesis:</strong> &ldquo;An authorized transaction can still be risky when agent behavior changes or the payment decision originates from untrusted content.&rdquo;
+          <p className="text-black/80 text-sm lg:text-base leading-relaxed font-bold font-mono tracking-wide">
+            Autonomous AI Agents are being given access to corporate wallets. We protect these financial rails by adding a governance layer that evaluates <strong className="text-black bg-yellow-200 px-1">Behavior</strong>, <strong className="text-black bg-blue-200 px-1">Policies</strong>, and <strong className="text-black bg-green-200 px-1">Provenance</strong> before any RazorpayX payout is executed.
           </p>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-[#232B36]/60 flex items-center justify-between text-xs font-mono text-slate-400">
-          <div className="flex items-center space-x-4">
-            <span>Isolation Forest Anomaly Detection</span>
-            <span>•</span>
-            <span>SHA-256 Tamper-Evident Audit Chain</span>
-            <span>•</span>
-            <span>RazorpayX Test Mode Gate</span>
+        <div className="flex flex-col justify-end space-y-4 lg:min-w-[280px]">
+          <div className="bg-black/5 p-4 border-2 border-black font-mono text-xs font-bold uppercase tracking-widest">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-black/60">Live Protection</span>
+              <span className="flex items-center space-x-1 text-green-600">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>Active</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-black/60">Mode</span>
+              <span className="text-black">Test Mode</span>
+            </div>
           </div>
           <Link
             href="/dashboard/demo"
-            className="px-3 py-1.5 bg-[#3395FF] hover:bg-[#2575d6] text-white font-bold rounded-lg transition-colors flex items-center space-x-1.5 text-xs"
+            className="w-full text-center px-4 py-3 border-2 border-black bg-black text-[#FDFBF7] hover:bg-[#FDFBF7] hover:text-black transition-colors shadow-[4px_4px_0_0_#000] hover:shadow-none hover:translate-y-1 font-mono font-bold uppercase tracking-widest flex items-center justify-center space-x-2 group"
           >
-            <span>Open Governance Scenarios</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>Run Governance Scenarios</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-mono text-red-400">
-          ✕ Backend API Error: {error}
+        <div className="p-4 bg-[#FDFBF7] text-red-600 border-2 border-red-600 shadow-[4px_4px_0_0_#dc2626] font-mono font-bold uppercase text-xs flex items-center space-x-3">
+          <XCircle className="w-5 h-5" />
+          <span>Backend API Error: {error}</span>
         </div>
       )}
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-4 gap-4">
-        {/* Total Agents */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>TOTAL AGENTS</span>
-            <Users className="w-4 h-4 text-[#3395FF]" />
+      {/* Decision Breakdown Cards - Redesigned with borders instead of solid fills */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[6px_6px_0_0_#000] p-6 relative flex flex-col justify-between hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#000] transition-all">
+          <div className="absolute top-0 left-0 w-full h-2 bg-green-400 border-b-2 border-black" />
+          <div className="flex justify-between items-start pt-2">
+            <div>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">ALLOW Decisions</span>
+              <p className="text-4xl font-bold font-mono tabular-nums text-black">
+                {stats?.decisions?.ALLOW || 0}
+              </p>
+            </div>
+            <div className="bg-green-400 border-2 border-black p-2 shadow-[2px_2px_0_0_#000]">
+              <CheckCircle2 className="w-6 h-6 text-black" />
+            </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-white font-mono tabular-nums">
-              {stats?.total_agents || 0}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Active governed agent profiles</p>
-          </div>
+          <p className="text-[10px] text-black/70 font-mono mt-4 uppercase tracking-wider font-bold">
+            Authorized normal spend passing all behavioral and policy checks.
+          </p>
         </div>
 
-        {/* Active Mandates */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>ACTIVE MANDATES</span>
-            <Shield className="w-4 h-4 text-emerald-400" />
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[6px_6px_0_0_#000] p-6 relative flex flex-col justify-between hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#000] transition-all">
+          <div className="absolute top-0 left-0 w-full h-2 bg-amber-400 border-b-2 border-black" />
+          <div className="flex justify-between items-start pt-2">
+            <div>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">FLAG Decisions</span>
+              <p className="text-4xl font-bold font-mono tabular-nums text-black">
+                {stats?.decisions?.FLAG || 0}
+              </p>
+            </div>
+            <div className="bg-amber-400 border-2 border-black p-2 shadow-[2px_2px_0_0_#000]">
+              <AlertTriangle className="w-6 h-6 text-black" />
+            </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-white font-mono tabular-nums">
-              {stats?.active_mandates || 0}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Enforced spend policies</p>
-          </div>
+          <p className="text-[10px] text-black/70 font-mono mt-4 uppercase tracking-wider font-bold">
+            Anomalous behavior or untrusted source detected. Execution paused.
+          </p>
         </div>
 
-        {/* Governed Amount */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>GOVERNED AMOUNT</span>
-            <CreditCard className="w-4 h-4 text-emerald-400" />
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[6px_6px_0_0_#000] p-6 relative flex flex-col justify-between hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#000] transition-all">
+          <div className="absolute top-0 left-0 w-full h-2 bg-red-500 border-b-2 border-black" />
+          <div className="flex justify-between items-start pt-2">
+            <div>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">BLOCK Decisions</span>
+              <p className="text-4xl font-bold font-mono tabular-nums text-black">
+                {stats?.decisions?.BLOCK || 0}
+              </p>
+            </div>
+            <div className="bg-red-500 border-2 border-black p-2 shadow-[2px_2px_0_0_#000]">
+              <XCircle className="w-6 h-6 text-white" />
+            </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-emerald-400 font-mono tabular-nums">
-              ₹{(stats?.governed_amount_inr || 0).toLocaleString()}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">
-              Total transaction volume processed
-            </p>
-          </div>
-        </div>
-
-        {/* Total Transactions */}
-        <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>TOTAL EVALUATIONS</span>
-            <Activity className="w-4 h-4 text-[#3395FF]" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold text-white font-mono tabular-nums">
-              {stats?.total_transactions || 0}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1 font-mono">Governor decisions logged</p>
-          </div>
+          <p className="text-[10px] text-black/70 font-mono mt-4 uppercase tracking-wider font-bold">
+            Hard policy violations (e.g., exceeding daily cap). Execution blocked.
+          </p>
         </div>
       </div>
 
-      {/* Decision Breakdown Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[#11161D] border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase text-slate-400">ALLOW Decisions</span>
-            <p className="text-xl font-bold text-emerald-400 font-mono mt-1 tabular-nums">
-              {stats?.decisions?.ALLOW || 0}
-            </p>
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-5">
+          <div className="flex items-center justify-between text-black text-xs font-mono font-bold uppercase tracking-widest mb-3">
+            <span>Agents</span>
+            <Users className="w-4 h-4 text-black/40" />
           </div>
-          <CheckCircle2 className="w-8 h-8 text-emerald-400/80" />
+          <p className="text-2xl font-bold text-black font-mono tabular-nums">
+            {stats?.total_agents || 0}
+          </p>
+          <p className="text-[9px] text-black/50 mt-1 font-mono font-bold uppercase tracking-wider">Governed AI Profiles</p>
         </div>
 
-        <div className="bg-[#11161D] border border-amber-500/20 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase text-slate-400">FLAG Decisions</span>
-            <p className="text-xl font-bold text-amber-400 font-mono mt-1 tabular-nums">
-              {stats?.decisions?.FLAG || 0}
-            </p>
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-5">
+          <div className="flex items-center justify-between text-black text-xs font-mono font-bold uppercase tracking-widest mb-3">
+            <span>Policies</span>
+            <Shield className="w-4 h-4 text-black/40" />
           </div>
-          <AlertTriangle className="w-8 h-8 text-amber-400/80" />
+          <p className="text-2xl font-bold text-black font-mono tabular-nums">
+            {stats?.active_mandates || 0}
+          </p>
+          <p className="text-[9px] text-black/50 mt-1 font-mono font-bold uppercase tracking-wider">Active Spend Limits</p>
         </div>
 
-        <div className="bg-[#11161D] border border-red-500/20 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase text-slate-400">BLOCK Decisions</span>
-            <p className="text-xl font-bold text-red-400 font-mono mt-1 tabular-nums">
-              {stats?.decisions?.BLOCK || 0}
-            </p>
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-5">
+          <div className="flex items-center justify-between text-black text-xs font-mono font-bold uppercase tracking-widest mb-3">
+            <span>Volume</span>
+            <CreditCard className="w-4 h-4 text-black/40" />
           </div>
-          <XCircle className="w-8 h-8 text-red-400/80" />
+          <p className="text-2xl font-bold text-black font-mono tabular-nums">
+            ₹{(stats?.governed_amount_inr || 0).toLocaleString()}
+          </p>
+          <p className="text-[9px] text-black/50 mt-1 font-mono font-bold uppercase tracking-wider">Total Processed (INR)</p>
+        </div>
+
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-5">
+          <div className="flex items-center justify-between text-black text-xs font-mono font-bold uppercase tracking-widest mb-3">
+            <span>Evaluations</span>
+            <Activity className="w-4 h-4 text-black/40" />
+          </div>
+          <p className="text-2xl font-bold text-black font-mono tabular-nums">
+            {stats?.total_transactions || 0}
+          </p>
+          <p className="text-[9px] text-black/50 mt-1 font-mono font-bold uppercase tracking-wider">Total Transactions</p>
         </div>
       </div>
 
-      {/* Pipeline Diagram */}
-      <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-            Governor Orchestration Pipeline Architecture
+      {/* Pipeline Diagram for Judges */}
+      <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 lg:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b-2 border-black pb-4">
+          <h3 className="text-sm lg:text-base font-bold text-black font-mono uppercase tracking-widest flex items-center space-x-2">
+            <Info className="w-5 h-5" />
+            <span>How The Pipeline Works</span>
           </h3>
-          <span className="text-[10px] font-mono text-slate-400">
-            Single entry point: POST /v1/payouts
+          <span className="text-[10px] hidden md:inline-block font-mono font-bold bg-black/5 text-black px-3 py-1 uppercase tracking-widest border-2 border-black">
+            Interceptors → AI Risk Model → Decision
           </span>
         </div>
 
-        <div className="grid grid-cols-6 gap-2 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { step: "REQUEST", label: "Agent Payout Intent", desc: "Agent ID, Amount, Payee, Provenance" },
-            { step: "POLICY", label: "Mandate Engine", desc: "Deterministic daily/weekly/txn caps" },
-            { step: "BEHAVIOR", label: "Anomaly Model", desc: "Isolation Forest risk scoring" },
-            { step: "PROVENANCE", label: "Trust Evaluator", desc: "Payment origin trust classification" },
-            { step: "DECISION", label: "Precedence Gate", desc: "ALLOW / FLAG / BLOCK reason aggregation" },
-            { step: "EXECUTION", label: "RazorpayX Execution", desc: "Strict execution gate (ALLOW only)" },
+            { step: "REQUEST", label: "Agent Payload", desc: "Agent makes a RazorpayX POST /v1/payout request." },
+            { step: "POLICY", label: "Mandate Engine", desc: "Checks deterministic limits (e.g. daily caps)." },
+            { step: "BEHAVIOR", label: "Anomaly Model", desc: "Isolation Forest checks if txn is unusual." },
+            { step: "PROVENANCE", label: "Trust Evaluator", desc: "Checks if intent origin is trusted vs scraped." },
+            { step: "DECISION", label: "Precedence Gate", desc: "Aggregates signals to ALLOW, FLAG, or BLOCK." },
+            { step: "EXECUTION", label: "RazorpayX API", desc: "If ALLOWED, passes to actual payment gateway." },
           ].map((item, idx) => (
             <div
               key={item.step}
-              className="bg-[#171D25] border border-[#232B36] rounded-lg p-3 relative flex flex-col justify-between"
+              className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-4 relative flex flex-col hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] transition-all"
             >
-              <div>
-                <span className="text-[10px] font-mono text-[#3395FF] font-bold block">
-                  0{idx + 1}. {item.step}
-                </span>
-                <p className="text-xs font-bold text-white mt-1">{item.label}</p>
-              </div>
-              <p className="text-[10px] text-slate-400 font-mono mt-2">{item.desc}</p>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest bg-black text-[#FDFBF7] px-2 py-1 inline-block mb-3 self-start shadow-[2px_2px_0_0_#000]">
+                0{idx + 1}. {item.step}
+              </span>
+              <p className="text-xs font-bold text-black uppercase mb-2">{item.label}</p>
+              <p className="text-[10px] text-black/60 font-mono font-bold leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Live Governance Feed */}
-      <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-            Live Governance Stream (Real Transactions)
+      <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 lg:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b-2 border-black pb-4">
+          <h3 className="text-sm lg:text-base font-bold text-black font-mono uppercase tracking-widest flex items-center space-x-2">
+            <CheckSquare className="w-5 h-5" />
+            <span>Recent Pipeline Evaluations</span>
           </h3>
           <Link
             href="/dashboard/transactions"
-            className="text-xs text-[#3395FF] hover:underline font-mono flex items-center space-x-1"
+            className="text-[10px] font-bold text-black hover:text-[#FDFBF7] hover:bg-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#000] hover:shadow-none uppercase font-mono tracking-widest transition-colors flex items-center space-x-2"
           >
-            <span>View All Transactions</span>
+            <span>View Audit Log</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
         {recentTxns.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 font-mono text-xs border border-dashed border-[#232B36] rounded-lg">
-            No transactions processed yet. Run a scenario in Governance Scenarios to seed activity.
+          <div className="p-10 text-center text-black/50 font-mono font-bold uppercase text-xs border-2 border-dashed border-black/30 bg-black/5">
+            No transactions processed yet. Navigate to Scenarios to seed activity.
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {recentTxns.map((t) => (
               <div
                 key={t.txn_id}
-                className="bg-[#171D25] border border-[#232B36] hover:border-[#3395FF]/30 transition-colors p-3 rounded-lg flex items-center justify-between text-xs font-mono"
+                className="bg-[#FDFBF7] border-2 border-black p-5 shadow-[4px_4px_0_0_#000] flex flex-col md:flex-row md:items-center justify-between text-xs font-mono font-bold uppercase tracking-wider hover:translate-x-1 hover:-translate-y-1 transition-transform gap-4"
               >
-                <div className="flex items-center space-x-4">
+                <div className="flex items-start md:items-center space-x-4">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      t.decision === "ALLOW"
-                        ? "bg-emerald-400"
+                    className={`w-3 h-3 border-2 border-black shadow-[2px_2px_0_0_#000] flex-shrink-0 mt-1 md:mt-0 ${
+                      t.decision === "ALLOW" || t.decision === "SUCCEEDED"
+                        ? "bg-green-400"
                         : t.decision === "FLAG"
                         ? "bg-amber-400"
-                        : "bg-red-400"
+                        : "bg-red-500"
                     }`}
                   />
                   <div>
-                    <span className="font-bold text-white">{t.txn_id}</span>
-                    <span className="text-slate-500 text-[10px] ml-2">
-                      Agent: <strong className="text-slate-300">{t.agent_id}</strong>
+                    <span className="text-black text-xs md:text-sm">{t.txn_id}</span>
+                    <span className="text-black/60 text-[10px] block mt-1">
+                      Agent: <strong className="text-black">{t.agent_id}</strong>
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">PAYEE / CAT</span>
-                    <span className="text-slate-300">
-                      {t.payee_id} ({t.category})
+                <div className="flex flex-wrap md:flex-nowrap items-center gap-4 md:space-x-8 text-black">
+                  <div className="md:text-right md:border-l-2 md:border-black/20 md:pl-6 w-full md:w-auto">
+                    <span className="text-black/60 text-[10px] block mb-1">PAYEE / CAT</span>
+                    <span>
+                      {t.payee_id} <span className="text-black/50">({t.category})</span>
                     </span>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">AMOUNT</span>
-                    <span className="text-emerald-400 font-bold">₹{t.amount_inr}</span>
+                  <div className="md:text-right md:border-l-2 md:border-black/20 md:pl-6 w-full md:w-auto">
+                    <span className="text-black/60 text-[10px] block mb-1">AMOUNT</span>
+                    <span className="text-black text-sm">₹{t.amount_inr}</span>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">DECISION</span>
+                  <div className="md:text-right md:border-l-2 md:border-black/20 md:pl-6 min-w-[120px] w-full md:w-auto">
+                    <span className="text-black/60 text-[10px] block mb-1">DECISION</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded text-[10px] ${
-                        t.decision === "ALLOW"
-                          ? "bg-emerald-500/10 text-emerald-400"
+                      className={`inline-block border-2 border-black px-3 py-1 shadow-[2px_2px_0_0_#000] ${
+                        t.decision === "ALLOW" || t.decision === "SUCCEEDED"
+                          ? "bg-green-400 text-black"
                           : t.decision === "FLAG"
-                          ? "bg-amber-500/10 text-amber-400"
-                          : "bg-red-500/10 text-red-400"
+                          ? "bg-amber-400 text-black"
+                          : "bg-red-500 text-white"
                       }`}
                     >
                       {t.decision}

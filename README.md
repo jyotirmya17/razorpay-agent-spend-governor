@@ -14,6 +14,19 @@
 
 ---
 
+## Where to Look First
+
+**Live Dashboard:** [https://razorpay-agent-spend-governor.vercel.app](https://razorpay-agent-spend-governor.vercel.app) *(or http://localhost:3000 locally)*
+
+**Quick Walkthrough (5 Steps):**
+1. **Open the Dashboard** and navigate to **Governance Scenarios** using the left sidebar.
+2. **Run Scenario 1 (Happy Path)** to see a standard payout get **ALLOWED** and execute on RazorpayX.
+3. **Run Scenarios 2, 3, & 4** to see the defensive layers in action—blocking policy violations and flagging behavioral anomalies or prompt injections (provenance attacks).
+4. **View the Audit Trail** via the sidebar to see the immutable, tamper-evident SHA-256 logs for each decision.
+5. **Read the Rules vs ML Evaluation** in section 6 of this README below to see our honest, data-backed findings on where ML actually outperforms static rules.
+
+---
+
 ## 1. The Problem
 
 Giving autonomous AI agents financial authority is essential for agentic automation—ranging from automated cloud infrastructure procurement to autonomous vendor invoice processing.

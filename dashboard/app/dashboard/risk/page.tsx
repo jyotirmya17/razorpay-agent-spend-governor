@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { RiskOverview } from "@/lib/types";
 import { RiskSignalsBreakdown } from "@/components/governance/RiskSignalsBreakdown";
-import { AlertTriangle, ShieldCheck, Activity, Layers, PieChart } from "lucide-react";
+import { Activity, Layers } from "lucide-react";
 
 export default function RiskPage() {
   const [riskData, setRiskData] = useState<RiskOverview | null>(null);
@@ -45,89 +45,89 @@ export default function RiskPage() {
   };
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between border-b-2 border-black pb-4">
         <div>
-          <h2 className="text-xl font-bold text-white font-mono tracking-tight">
+          <h2 className="text-xl font-bold text-black font-mono tracking-tight uppercase">
             Risk & Anomaly Command Center
           </h2>
-          <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Operational risk distribution, score histogram & 12 canonical feature signals
+          <p className="text-xs text-black/60 font-mono mt-1 font-bold tracking-widest uppercase">
+            Operational risk distribution & 12 feature signals
           </p>
         </div>
-        <span className="text-xs font-mono text-slate-400 bg-[#11161D] px-3 py-1.5 rounded-lg border border-[#232B36]">
-          Model: <strong className="text-[#3395FF]">behavioral_iforest_v1</strong>
+        <span className="text-xs font-mono font-bold tracking-widest text-black bg-[#FDFBF7] px-4 py-2 border-2 border-black shadow-[4px_4px_0_0_#000] uppercase">
+          Model: <strong className="text-black ml-2 underline underline-offset-4 decoration-black/30">behavioral_iforest_v1</strong>
         </span>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-mono text-red-400">
+        <div className="p-4 bg-[#FDFBF7] text-red-600 border-2 border-red-500 shadow-[4px_4px_0_0_#ef4444] text-xs font-mono font-bold uppercase tracking-widest flex items-center space-x-2">
           ✕ Error: {error}
         </div>
       )}
 
       {loading ? (
-        <div className="space-y-4">
-          <div className="animate-pulse bg-[#11161D] h-32 rounded-xl border border-[#232B36]" />
-          <div className="animate-pulse bg-[#11161D] h-64 rounded-xl border border-[#232B36]" />
+        <div className="space-y-6">
+          <div className="animate-pulse bg-[#FDFBF7] h-32 border-2 border-black shadow-[4px_4px_0_0_#000]" />
+          <div className="animate-pulse bg-[#FDFBF7] h-64 border-2 border-black shadow-[4px_4px_0_0_#000]" />
         </div>
       ) : (
         <>
           {/* Anomaly Score Bucket Cards */}
-          <div className="grid grid-cols-4 gap-4 font-mono">
-            <div className="bg-[#11161D] border border-emerald-500/20 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">LOW RISK (&lt; 0.30)</span>
-              <p className="text-2xl font-bold text-emerald-400 mt-1 tabular-nums">
+          <div className="grid grid-cols-4 gap-6 font-mono font-bold uppercase tracking-widest text-black">
+            <div className="bg-[#FDFBF7] border-2 border-green-500 shadow-[6px_6px_0_0_#22c55e] p-5 hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#22c55e] transition-all">
+              <span className="text-[10px] text-green-600 border-b-2 border-green-500 pb-1 block">LOW RISK (&lt; 0.30)</span>
+              <p className="text-4xl font-bold text-black mt-3 tabular-nums">
                 {riskData?.score_buckets?.low_risk_lt_03 || 0}
               </p>
-              <span className="text-[10px] text-slate-500 block mt-1">Normal baseline behavior</span>
+              <span className="text-[10px] text-black/70 block mt-2 leading-tight bg-black/5 px-2 py-1">Normal baseline behavior</span>
             </div>
 
-            <div className="bg-[#11161D] border border-blue-500/20 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">MODERATE (0.30 - 0.50)</span>
-              <p className="text-2xl font-bold text-[#3395FF] mt-1 tabular-nums">
+            <div className="bg-[#FDFBF7] border-2 border-black shadow-[6px_6px_0_0_#000] p-5 hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#000] transition-all">
+              <span className="text-[10px] text-black border-b-2 border-black pb-1 block">MODERATE (0.30 - 0.50)</span>
+              <p className="text-4xl font-bold text-black mt-3 tabular-nums">
                 {riskData?.score_buckets?.moderate_03_05 || 0}
               </p>
-              <span className="text-[10px] text-slate-500 block mt-1">Near threshold zone</span>
+              <span className="text-[10px] text-black/60 block mt-2 leading-tight bg-black/5 px-2 py-1">Near threshold zone</span>
             </div>
 
-            <div className="bg-[#11161D] border border-amber-500/20 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">ELEVATED (0.50 - 0.70)</span>
-              <p className="text-2xl font-bold text-amber-400 mt-1 tabular-nums">
+            <div className="bg-[#FDFBF7] border-2 border-amber-500 shadow-[6px_6px_0_0_#f59e0b] p-5 hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#f59e0b] transition-all">
+              <span className="text-[10px] text-amber-600 border-b-2 border-amber-500 pb-1 block">ELEVATED (0.50 - 0.70)</span>
+              <p className="text-4xl font-bold text-black mt-3 tabular-nums">
                 {riskData?.score_buckets?.elevated_05_07 || 0}
               </p>
-              <span className="text-[10px] text-slate-500 block mt-1">Flagged for review</span>
+              <span className="text-[10px] text-black/70 block mt-2 leading-tight bg-black/5 px-2 py-1">Flagged for review</span>
             </div>
 
-            <div className="bg-[#11161D] border border-red-500/20 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">HIGH RISK (&ge; 0.70)</span>
-              <p className="text-2xl font-bold text-red-400 mt-1 tabular-nums">
+            <div className="bg-[#FDFBF7] border-2 border-red-500 shadow-[6px_6px_0_0_#ef4444] p-5 hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#ef4444] transition-all text-black">
+              <span className="text-[10px] text-red-600 border-b-2 border-red-500 pb-1 block">HIGH RISK (&ge; 0.70)</span>
+              <p className="text-4xl font-bold mt-3 tabular-nums">
                 {riskData?.score_buckets?.high_risk_gte_07 || 0}
               </p>
-              <span className="text-[10px] text-slate-500 block mt-1">High anomaly deviation</span>
+              <span className="text-[10px] block mt-2 leading-tight bg-black/10 px-2 py-1">High anomaly deviation</span>
             </div>
           </div>
 
           {/* Reason Code Frequencies */}
-          <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 space-y-4">
-            <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center space-x-2">
-              <Activity className="w-4 h-4 text-[#3395FF]" />
+          <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 space-y-6">
+            <h3 className="text-sm font-bold text-black font-mono uppercase tracking-widest flex items-center space-x-2 border-b-2 border-black pb-4">
+              <Activity className="w-5 h-5" />
               <span>Operational Risk Reason Code Frequency</span>
             </h3>
 
             {riskData?.reason_code_frequencies?.length === 0 ? (
-              <p className="text-xs font-mono text-slate-500">No risk reason codes logged yet.</p>
+              <p className="text-xs font-mono font-bold uppercase tracking-widest text-black/50 border-2 border-dashed border-black p-8 text-center">No risk reason codes logged yet.</p>
             ) : (
-              <div className="space-y-2 font-mono text-xs">
+              <div className="space-y-4 font-mono text-xs font-bold uppercase tracking-widest">
                 {riskData?.reason_code_frequencies.map((item) => (
                   <div
                     key={item.reason}
-                    className="bg-[#171D25] border border-[#232B36] p-3 rounded-lg flex items-center justify-between"
+                    className="bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] p-4 flex items-center justify-between"
                   >
-                    <span className="text-white font-bold">{item.reason}</span>
-                    <div className="flex items-center space-x-3">
-                      <span className="text-slate-400 text-[10px]">Occurrences:</span>
-                      <span className="px-2 py-0.5 rounded bg-[#3395FF]/10 text-[#3395FF] border border-[#3395FF]/20 font-bold">
+                    <span className="text-black">{item.reason}</span>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-black/60 text-[10px]">Occurrences:</span>
+                      <span className="px-3 py-1 bg-black text-[#FDFBF7] border-2 border-black shadow-[2px_2px_0_0_#000]">
                         {item.count}
                       </span>
                     </div>
@@ -138,13 +138,15 @@ export default function RiskPage() {
           </div>
 
           {/* Canonical 12 Behavioral Signals Reference */}
-          <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-emerald-400" />
+          <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 space-y-6">
+            <div className="flex items-center justify-between border-b-2 border-black pb-4">
+              <h3 className="text-sm font-bold text-black font-mono uppercase tracking-widest flex items-center space-x-2">
+                <Layers className="w-5 h-5" />
                 <span>12 Canonical Behavioral Risk Feature Schema</span>
               </h3>
-              <span className="text-[10px] font-mono text-slate-400">Phase 4.2 Feature Definition</span>
+              <span className="text-[10px] font-mono font-bold bg-black text-[#FDFBF7] px-3 py-1 uppercase tracking-widest shadow-[2px_2px_0_0_#000]">
+                Phase 4.2 Feature Definition
+              </span>
             </div>
 
             <RiskSignalsBreakdown features={dummyFeaturesSample} anomalyScore={0.18} />

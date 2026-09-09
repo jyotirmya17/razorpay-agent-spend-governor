@@ -3,17 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { DemoScenarioResult } from "@/lib/types";
-import {
-  PlayCircle,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  RefreshCw,
-  Shield,
-  Zap,
-  ArrowRight,
-  Layers,
-} from "lucide-react";
+import { PlayCircle, RefreshCw, Zap } from "lucide-react";
 
 interface ScenarioCardMeta {
   id: string;
@@ -108,32 +98,44 @@ export default function DemoPage() {
   };
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6">
       {/* Header & Evaluator Note */}
-      <div className="bg-[#11161D] border border-[#232B36] rounded-xl p-6 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <Zap className="w-5 h-5 text-[#3395FF]" />
-            <h2 className="text-lg font-bold text-white font-mono uppercase tracking-wider">
+      <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-8 space-y-4">
+        <div className="flex items-center justify-between border-b-2 border-black pb-4">
+          <div className="flex items-center space-x-3">
+            <Zap className="w-6 h-6 text-black" />
+            <h2 className="text-xl font-bold text-black font-mono uppercase tracking-widest">
               Governance Scenarios Evaluation Suite
             </h2>
           </div>
-          <span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-bold">
+          <span className="px-3 py-1.5 bg-black text-[#FDFBF7] border-2 border-black shadow-[2px_2px_0_0_#000] text-xs font-mono font-bold uppercase tracking-widest">
             RAZORPAYX TEST MODE ONLY
           </span>
         </div>
 
-        <p className="text-xs text-slate-300 font-mono leading-relaxed">
-          Every scenario constructs a real <strong className="text-white">PayoutRequest</strong> and sends it through the live <strong className="text-[#3395FF]">POST /v1/payouts</strong> pipeline in FastAPI + PostgreSQL. Nothing is mocked or hardcoded.
+        <p className="text-sm text-black font-mono font-bold uppercase tracking-wide leading-relaxed">
+          Every scenario constructs a real <strong className="text-black bg-black/10 px-1.5 py-0.5">PayoutRequest</strong> and sends it through the live <strong className="text-black bg-black/10 px-1.5 py-0.5">POST /v1/payouts</strong> pipeline in FastAPI + PostgreSQL. Nothing is mocked or hardcoded.
         </p>
 
-        <div className="pt-2 flex items-center space-x-4 text-[11px] font-mono text-slate-400 border-t border-[#232B36]">
-          <span>Request → Policy → Behavior → Provenance → Decision → Execution → Audit</span>
+        <div className="pt-4 flex items-center space-x-2 text-xs font-mono font-bold tracking-widest uppercase text-black">
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Request</span>
+          <span>→</span>
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Policy</span>
+          <span>→</span>
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Behavior</span>
+          <span>→</span>
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Provenance</span>
+          <span>→</span>
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Decision</span>
+          <span>→</span>
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Execution</span>
+          <span>→</span>
+          <span className="bg-black/5 px-2 py-1 border-2 border-black">Audit</span>
         </div>
       </div>
 
       {/* 6 Scenario Cards */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-6">
         {SCENARIOS.map((sc) => {
           const isRunning = runningId === sc.id;
           const res = results[sc.id];
@@ -146,120 +148,120 @@ export default function DemoPage() {
           return (
             <div
               key={sc.id}
-              className="bg-[#11161D] border border-[#232B36] hover:border-[#3395FF]/40 transition-colors rounded-xl p-5 flex flex-col justify-between space-y-4"
+              className="bg-[#FDFBF7] border-2 border-black shadow-[6px_6px_0_0_#000] p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#000] transition-all"
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded bg-[#3395FF]/10 text-[#3395FF] border border-[#3395FF]/20 text-[10px] font-mono font-bold">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-black pb-3">
+                  <span className="px-2 py-1 bg-black text-[#FDFBF7] text-[10px] font-mono font-bold uppercase tracking-widest shadow-[2px_2px_0_0_#000]">
                     {sc.badge}
                   </span>
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs font-mono font-bold uppercase tracking-widest text-black">
                     Expected:{" "}
                     <strong
-                      className={
+                      className={`px-2 py-0.5 border-2 shadow-[2px_2px_0_0_#000] ml-2 ${
                         isAllow
-                          ? "text-emerald-400"
+                          ? "border-green-500 text-green-600 bg-[#FDFBF7]"
                           : isFlag
-                          ? "text-amber-400"
-                          : "text-red-400"
-                      }
+                          ? "border-amber-500 text-amber-600 bg-[#FDFBF7]"
+                          : "border-red-500 text-red-600 bg-[#FDFBF7]"
+                      }`}
                     >
                       {sc.expected}
                     </strong>
                   </span>
                 </div>
 
-                <h3 className="text-sm font-bold text-white font-mono">{sc.name}</h3>
-                <p className="text-xs text-slate-300 font-mono leading-relaxed">{sc.description}</p>
+                <h3 className="text-base font-bold text-black font-mono uppercase tracking-tight">{sc.name}</h3>
+                <p className="text-xs text-black/70 font-mono font-bold tracking-widest uppercase leading-relaxed">{sc.description}</p>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-[#171D25] p-2.5 rounded-lg border border-[#232B36]">
+                <div className="grid grid-cols-2 gap-4 text-xs font-mono font-bold uppercase tracking-widest border-2 border-black p-4 bg-black/5 shadow-[2px_2px_0_0_#000]">
                   <div>
-                    <span className="text-slate-500 block text-[9px]">AGENT ID</span>
-                    <span className="text-white font-bold">{sc.agent}</span>
+                    <span className="text-black/60 block text-[10px] mb-1">AGENT ID</span>
+                    <span className="text-black">{sc.agent}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px]">PAYOUT AMOUNT</span>
-                    <span className="text-emerald-400 font-bold">{sc.amount}</span>
+                    <span className="text-black/60 block text-[10px] mb-1">PAYOUT AMOUNT</span>
+                    <span className="text-black">{sc.amount}</span>
                   </div>
                 </div>
 
-                <p className="text-[10px] text-slate-400 font-mono italic">{sc.details}</p>
+                <p className="text-[10px] text-black/60 font-mono font-bold uppercase tracking-wider">{sc.details}</p>
               </div>
 
               {/* Action Button & Output */}
-              <div className="space-y-3 pt-2 border-t border-[#232B36]">
+              <div className="space-y-4 pt-4 border-t-2 border-black">
                 <button
                   onClick={() => runScenario(sc.id)}
                   disabled={isRunning}
-                  className="w-full py-2 bg-[#171D25] hover:bg-[#232B36] border border-[#3395FF]/40 text-[#3395FF] hover:text-white font-mono font-bold text-xs rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                  className="w-full py-3 bg-[#FDFBF7] hover:bg-black border-2 border-black text-black hover:text-[#FDFBF7] font-mono font-bold text-sm uppercase tracking-widest shadow-[4px_4px_0_0_#000] hover:shadow-none hover:translate-y-1 transition-all flex items-center justify-center space-x-3 disabled:opacity-50 disabled:hover:bg-[#FDFBF7] disabled:hover:text-black disabled:hover:shadow-[4px_4px_0_0_#000] disabled:hover:translate-y-0"
                 >
                   {isRunning ? (
                     <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Orchestrating POST /v1/payouts...</span>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>POST /v1/payouts...</span>
                     </>
                   ) : (
                     <>
-                      <PlayCircle className="w-3.5 h-3.5" />
+                      <PlayCircle className="w-5 h-5" />
                       <span>RUN SCENARIO #{sc.id}</span>
                     </>
                   )}
                 </button>
 
                 {err && (
-                  <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded text-[11px] font-mono text-red-400">
+                  <div className="p-3 bg-[#FDFBF7] text-red-600 border-2 border-red-500 shadow-[4px_4px_0_0_#ef4444] text-xs font-mono font-bold uppercase tracking-widest">
                     ✕ Error: {err}
                   </div>
                 )}
 
                 {res && (
-                  <div className="p-3 bg-[#171D25] border border-[#232B36] rounded-lg space-y-2 text-xs font-mono">
-                    <div className="flex items-center justify-between border-b border-[#232B36] pb-2">
-                      <span className="text-slate-400">Actual Decision:</span>
+                  <div className="p-4 bg-black/5 border-2 border-black shadow-[4px_4px_0_0_#000] space-y-3 text-xs font-mono font-bold uppercase tracking-widest text-black">
+                    <div className="flex items-center justify-between border-b-2 border-black pb-3 border-dashed">
+                      <span className="text-black/60">Actual Decision:</span>
                       <span
-                        className={`font-bold px-2 py-0.5 rounded text-[11px] inline-flex items-center space-x-1.5 ${
-                          res.actual_decision === "ALLOW"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        className={`font-bold px-3 py-1 border-2 shadow-[2px_2px_0_0_#000] inline-flex items-center space-x-2 ${
+                          res.actual_decision === "ALLOW" || res.actual_decision === "SUCCEEDED"
+                            ? "border-green-500 text-green-600 bg-[#FDFBF7]"
                             : res.actual_decision === "FLAG"
-                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                            : "bg-red-500/10 text-red-400 border border-red-500/20"
+                            ? "border-amber-500 text-amber-600 bg-[#FDFBF7]"
+                            : "border-red-500 text-red-600 bg-[#FDFBF7]"
                         }`}
                       >
                         <span
-                          className={`w-2 h-2 rounded-full ${
-                            res.actual_decision === "ALLOW"
-                              ? "bg-emerald-400"
+                          className={`w-2 h-2 rounded-full border-2 ${
+                            res.actual_decision === "ALLOW" || res.actual_decision === "SUCCEEDED"
+                              ? "bg-green-600 border-green-700"
                               : res.actual_decision === "FLAG"
-                              ? "bg-amber-400"
-                              : "bg-red-400"
+                              ? "bg-amber-600 border-amber-700"
+                              : "bg-red-600 border-red-700"
                           }`}
                         />
                         <span>{res.actual_decision}</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Match Expected:</span>
-                      <span className={res.matched_expected ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-black/60">Match Expected:</span>
+                      <span className={res.matched_expected ? "text-green-500" : "text-red-500"}>
                         {res.matched_expected ? "✓ MATCHED" : "✕ MISMATCHED"}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Execution Status:</span>
-                      <span className="text-white font-bold">{res.execution_status}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-black/60">Execution Status:</span>
+                      <span className="text-black">{res.execution_status}</span>
                     </div>
 
                     {res.razorpay_payout_id && (
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400">Razorpay Payout ID:</span>
-                        <span className="text-emerald-400 font-bold">{res.razorpay_payout_id}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-black/60">Razorpay Payout ID:</span>
+                        <span className="text-black">{res.razorpay_payout_id}</span>
                       </div>
                     )}
 
-                    <div className="text-[10px] text-slate-400 pt-1 border-t border-[#232B36] flex items-center justify-between">
+                    <div className="text-[10px] text-black/60 pt-2 border-t-2 border-black border-dashed flex items-center justify-between">
                       <span>Audit Events Generated:</span>
-                      <strong className="text-white font-mono">
+                      <strong className="text-black">
                         {res.audit_events_count ?? res.audit_events_created ?? 0}
                       </strong>
                     </div>

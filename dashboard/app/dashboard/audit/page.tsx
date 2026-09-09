@@ -35,58 +35,60 @@ export default function AuditPage() {
   }, [page]);
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between border-b-2 border-black pb-4">
         <div>
-          <h2 className="text-xl font-bold text-white font-mono tracking-tight">
+          <h2 className="text-xl font-bold text-black font-mono tracking-tight uppercase">
             Tamper-Evident Audit Trail
           </h2>
-          <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Cryptographic SHA-256 hash-chain sequence of all Governor decisions & state changes
+          <p className="text-xs text-black/60 font-mono mt-1 font-bold tracking-widest uppercase">
+            Cryptographic SHA-256 hash-chain sequence
           </p>
         </div>
-        <span className="text-xs font-mono text-slate-400 bg-[#11161D] px-3 py-1.5 rounded-lg border border-[#232B36]">
-          Total Audit Events: <strong className="text-white">{total}</strong>
+        <span className="text-xs font-mono font-bold tracking-widest text-black bg-[#FDFBF7] px-4 py-2 border-2 border-black shadow-[4px_4px_0_0_#000] uppercase">
+          Total Events: <strong className="text-black ml-2 underline underline-offset-4 decoration-black/30">{total}</strong>
         </span>
       </div>
 
       {/* Audit Verifier Widget */}
-      <AuditVerifierButton />
+      <div className="mb-6">
+        <AuditVerifierButton />
+      </div>
 
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-mono text-red-400">
+        <div className="p-4 bg-[#FDFBF7] text-red-600 border-2 border-red-500 shadow-[4px_4px_0_0_#ef4444] text-xs font-mono font-bold uppercase tracking-widest flex items-center space-x-2">
           ✕ Error: {error}
         </div>
       )}
 
       {/* Audit Event Stream */}
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse bg-[#11161D] h-24 rounded-xl border border-[#232B36]" />
+            <div key={i} className="animate-pulse bg-[#FDFBF7] h-24 border-2 border-black shadow-[4px_4px_0_0_#000]" />
           ))}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <AuditChainViewer events={events} />
 
           {/* Pagination Controls */}
-          <div className="bg-[#11161D] p-3 border border-[#232B36] rounded-xl flex items-center justify-between font-mono text-xs text-slate-400">
+          <div className="bg-[#FDFBF7] p-4 border-2 border-black shadow-[8px_8px_0_0_#000] flex items-center justify-between font-mono font-bold uppercase tracking-widest text-xs text-black">
             <span>
               Page {page} of {Math.ceil(total / pageSize) || 1}
             </span>
-            <div className="flex space-x-2">
+            <div className="flex space-x-4">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 bg-[#171D25] hover:bg-[#232B36] border border-[#232B36] rounded disabled:opacity-40"
+                className="px-4 py-2 bg-[#FDFBF7] hover:bg-black hover:text-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] hover:shadow-none hover:translate-y-1 transition-all disabled:opacity-40 disabled:hover:bg-[#FDFBF7] disabled:hover:text-black disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_0_#000]"
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page * pageSize >= total}
-                className="px-3 py-1 bg-[#171D25] hover:bg-[#232B36] border border-[#232B36] rounded disabled:opacity-40"
+                className="px-4 py-2 bg-[#FDFBF7] hover:bg-black hover:text-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] hover:shadow-none hover:translate-y-1 transition-all disabled:opacity-40 disabled:hover:bg-[#FDFBF7] disabled:hover:text-black disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_0_#000]"
               >
                 Next
               </button>
