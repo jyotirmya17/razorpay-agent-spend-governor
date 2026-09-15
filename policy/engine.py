@@ -28,6 +28,8 @@ def check_policy(db: Session, request: PayoutRequest, idempotency_key: str) -> T
     agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
     if not agent:
         return False, "AGENT_UNKNOWN", {}
+    if not agent.is_active:
+        return False, "AGENT_INACTIVE", {}
     if agent.status != "ACTIVE":
         return False, "AGENT_REVOKED", {}
         

@@ -32,6 +32,7 @@ class Agent(Base):
     agent_id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False)
     status = Column(String, default=AgentStatus.ACTIVE, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
     
     mandates = relationship("Mandate", back_populates="agent")
 
@@ -97,6 +98,12 @@ class IdempotencyRecord(Base):
 # To initialize DB schemas
 def init_db():
     Base.metadata.create_all(bind=engine)
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE agents ADD COLUMN is_active BOOLEAN DEFAULT TRUE NOT NULL"))
+    except Exception as e:
+        # Ignore if column already exists
+        pass
 
 class WebhookEvent(Base):
     __tablename__ = "webhook_events"

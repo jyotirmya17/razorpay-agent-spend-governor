@@ -2,9 +2,13 @@ import json
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 from gateway.models.db import (
     SessionLocal, Agent, Mandate, MandateUsage, Transaction, AuditEvent, ProvenanceRecord, init_db
@@ -31,15 +35,17 @@ def get_db():
 # ─── Existing Orchestration Endpoint ──────────────────────────────────────────
 
 @router.post("/v1/payouts")
+@limiter.limit("20/minute")
 def create_payout(
-    request: PayoutRequest,
+    request: Request,
+    payload: PayoutRequest,
     x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
     db: Session = Depends(get_db),
 ):
-    idempotency_key = x_idempotency_key if isinstance(x_idempotency_key, str) and x_idempotency_key else request.idempotency_key
+    idempotency_key = x_idempotency_key if isinstance(x_idempotency_key, str) and x_idempotency_key else payload.idempotency_key
 
 
-    policy_allowed, policy_reason, mandate_details = check_policy(db, request, idempotency_key)
+    policy_allowed, policy_reason, mandate_details = check_policy(db, payload, idempotency_key)
     db.commit()
 
     if policy_reason == "IDEMPOTENT_REPLAY":
@@ -57,7 +63,7 @@ def create_payout(
 
     risk_result, execution_result = orchestrate_payout(
         db=db,
-        request=request,
+        request=payload,
         idempotency_key=idempotency_key,
         policy_allowed=policy_allowed,
         policy_reason=policy_reason,
@@ -70,7 +76,7 @@ def create_payout(
         "anomaly_score": risk_result["anomaly_score"],
         "model_version": risk_result["model_version"],
         "transaction_id": idempotency_key,
-        "agent_id": request.agent_id,
+        "agent_id": payload.agent_id,
     }
 
     if execution_result:
@@ -81,6 +87,25 @@ def create_payout(
 
     return response
 
+@router.post("/v1/payouts/{txn_id}/approve")
+@limiter.limit("20/minute")
+def approve_payout(request: Request, txn_id: str, db: Session = Depends(get_db)):
+    txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
+    if not txn:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    txn.status = "APPROVED"
+    db.commit()
+    return {"status": "ok", "message": "Payout approved"}
+
+@router.post("/v1/payouts/{txn_id}/deny")
+@limiter.limit("20/minute")
+def deny_payout(request: Request, txn_id: str, db: Session = Depends(get_db)):
+    txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
+    if not txn:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    txn.status = "DENIED"
+    db.commit()
+    return {"status": "ok", "message": "Payout denied"}
 
 # ─── Phase 5 Read & Management Endpoints ─────────────────────────────────────
 
@@ -413,6 +438,23 @@ def get_agents_list(db: Session = Depends(get_db)):
     return res
 
 
+def verify_admin(x_admin_token: Optional[str] = Header(None)):
+    config = get_config()
+    # In absence of a real global auth, use the webhook secret as a crude admin token
+    # or just enforce it exists and matches something. For this task, we will just check it.
+    if x_admin_token != config.webhook_secret:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+@router.delete("/v1/agents/{agent_id}")
+def delete_agent(agent_id: str, db: Session = Depends(get_db), _ = Depends(verify_admin)):
+    agent = db.query(Agent).filter_by(agent_id=agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    
+    agent.is_active = False
+    db.commit()
+    return {"status": "ok", "message": "Agent deactivated"}
+
 @router.get("/v1/agents/{agent_id}/detail")
 def get_agent_detail(agent_id: str, db: Session = Depends(get_db)):
     """Comprehensive agent detail: identity, mandate, limits, behavioral history."""
@@ -716,7 +758,8 @@ def verify_audit_chain(db: Session = Depends(get_db)):
 
 
 @router.post("/v1/demo/scenario/{scenario_id}")
-def run_demo_scenario(scenario_id: str, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(get_db)):
     """
     Evaluator Demo Runner: executes specified scenario against real Governor /v1/payouts pipeline.
     Scenarios:
@@ -855,7 +898,7 @@ def run_demo_scenario(scenario_id: str, db: Session = Depends(get_db)):
             amount=meta["amount"],
             provenance=meta["provenance"],
         )
-        create_payout(request=req, db=db)
+        create_payout(request=request, payload=req, db=db)
 
     # Special handling for Scenario 6: revoke mandate first
     if scenario_id == "6":
@@ -874,7 +917,7 @@ def run_demo_scenario(scenario_id: str, db: Session = Depends(get_db)):
         provenance=meta["provenance"],
     )
 
-    result = create_payout(request=req, db=db)
+    result = create_payout(request=request, payload=req, db=db)
 
     actual_dec = result.get("decision")
     execution_status = result.get("status")
