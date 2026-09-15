@@ -42,6 +42,20 @@ export default function AgentsPage() {
     }
   };
 
+  const handleDeactivate = async () => {
+    if (!selectedAgentId) return;
+    const token = window.prompt("Operator Action: Enter Admin Token to deactivate this agent:");
+    if (!token) return;
+    try {
+      await api.deactivateAgent(selectedAgentId, token);
+      alert("Agent successfully deactivated.");
+      setSelectedAgentId(null);
+      fetchAgents();
+    } catch (err: any) {
+      alert("Failed to deactivate: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b-2 border-black pb-4">
@@ -161,12 +175,20 @@ export default function AgentsPage() {
                 <h3 className="text-xl font-bold text-black uppercase">Agent Profile</h3>
                 <p className="text-xs text-black/60 font-bold tracking-widest mt-1">{selectedAgentId}</p>
               </div>
-              <button
-                onClick={() => setSelectedAgentId(null)}
-                className="p-2 bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] text-black hover:bg-black hover:text-[#FDFBF7] hover:translate-y-1 hover:shadow-none transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleDeactivate}
+                  className="px-4 py-2 bg-red-100 border-2 border-red-500 text-red-600 shadow-[4px_4px_0_0_#ef4444] hover:bg-red-500 hover:text-white transition-all text-xs tracking-widest font-bold uppercase"
+                >
+                  Deactivate Agent
+                </button>
+                <button
+                  onClick={() => setSelectedAgentId(null)}
+                  className="p-2 bg-[#FDFBF7] border-2 border-black shadow-[4px_4px_0_0_#000] text-black hover:bg-black hover:text-[#FDFBF7] hover:translate-y-1 hover:shadow-none transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {detailLoading || !agentDetail ? (

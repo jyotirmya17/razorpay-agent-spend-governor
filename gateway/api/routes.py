@@ -419,7 +419,7 @@ def get_agents_list(db: Session = Depends(get_db)):
             {
                 "agent_id": a.agent_id,
                 "name": a.name,
-                "status": a.status,
+                "status": a.status if getattr(a, "is_active", True) else "DEACTIVATED",
                 "mandate_id": mandate.mandate_id if mandate else None,
                 "mandate_status": mandate.status if mandate else "NONE",
                 "daily_cap": daily_cap,

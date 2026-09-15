@@ -92,4 +92,13 @@ export const api = {
 
   runDemoScenario: (scenarioId: string): Promise<DemoScenarioResult> =>
     fetchJSON<DemoScenarioResult>(`/v1/demo/scenario/${scenarioId}`, { method: "POST" }),
+
+  deactivateAgent: (agentId: string, adminToken: string): Promise<{ agent_id: string; is_active: boolean; message: string }> =>
+    fetchJSON<{ agent_id: string; is_active: boolean; message: string }>(
+      `/v1/agents/${encodeURIComponent(agentId)}`,
+      { 
+        method: "DELETE",
+        headers: { "X-Admin-Token": adminToken }
+      }
+    ),
 };
