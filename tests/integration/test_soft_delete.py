@@ -44,7 +44,7 @@ def test_soft_delete_agent():
     resp = client.post("/v1/payouts", json=payload, headers={"X-Idempotency-Key": "test_soft_delete_txn"})
     # Since agent is inactive, it should return AGENT_INACTIVE status
     assert resp.status_code == 200
-    assert resp.json()["decision"] == "BLOCK"
+    assert resp.json()["decision"] == "DENY"
     assert "AGENT_INACTIVE" in resp.json().get("reason_codes", [])
     
     db.close()

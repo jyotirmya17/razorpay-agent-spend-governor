@@ -98,7 +98,7 @@ def test_transactions_listing_and_filtering():
     assert data["total"] >= 2
     assert len(data["items"]) <= 10
 
-    resp_search = client.get("/v1/transactions?search=demo_normal_agent")
+    resp_search = client.get("/v1/transactions?search=procurement-agent")
     assert resp_search.status_code == 200
     assert len(resp_search.json()["items"]) >= 1
 
@@ -127,12 +127,12 @@ def test_agents_listing_and_detail():
     agents = resp.json()
     assert len(agents) >= 5
     agent_ids = [a["agent_id"] for a in agents]
-    assert "demo_normal_agent" in agent_ids
+    assert "procurement-agent" in agent_ids
 
-    resp_detail = client.get("/v1/agents/demo_normal_agent/detail")
+    resp_detail = client.get("/v1/agents/procurement-agent/detail")
     assert resp_detail.status_code == 200
     detail = resp_detail.json()
-    assert detail["agent_id"] == "demo_normal_agent"
+    assert detail["agent_id"] == "procurement-agent"
     assert "mandate" in detail
     assert detail["mandate"]["daily_cap"] == 500000
 
@@ -143,7 +143,7 @@ def test_mandates_listing_and_revocation():
     mandates = resp.json()
     assert len(mandates) >= 5
 
-    man_id = "man_demo_revocation"
+    man_id = "man_support"
     resp_revoke = client.post(f"/v1/mandates/{man_id}/revoke")
     assert resp_revoke.status_code == 200
     assert resp_revoke.json()["status"] == "REVOKED"
@@ -179,14 +179,16 @@ def test_audit_events_and_verification():
     assert v["events_checked"] > 0
 
 
-def test_all_six_demo_scenarios():
+def test_all_eight_demo_scenarios():
     scenarios = [
         ("1", "ALLOW"),
-        ("2", "BLOCK"),
-        ("3", "FLAG"),
-        ("4", "FLAG"),
-        ("5", "IDEMPOTENT_REPLAY"),
-        ("6", "BLOCK"),
+        ("2", "DENY"),
+        ("3", "REVIEW"),
+        ("4", "DENY"),
+        ("5", "REVIEW"),
+        ("6", "IDEMPOTENT_REPLAY"),
+        ("7", "DENY"),
+        ("8", "DENY"),
     ]
 
     for scenario_id, expected_dec in scenarios:
@@ -197,7 +199,7 @@ def test_all_six_demo_scenarios():
         assert res["actual_decision"] == expected_dec
         assert res["matched_expected"] is True
 
-        if expected_dec in ("BLOCK", "FLAG"):
+        if expected_dec in ("DENY", "REVIEW"):
             assert res["razorpay_payout_id"] is None
 
 
@@ -219,7 +221,7 @@ def test_demo_scenarios_razorpayx_gating():
     from unittest.mock import patch
     with patch("execution.service.RazorpayXClient") as MockClient:
         # Scenarios 2, 3, 4, 6 must NEVER reach execution service
-        for s_id in ["2", "3", "4", "6"]:
+        for s_id in ["2", "3", "4", "5", "7", "8"]:
             client.post(f"/v1/demo/scenario/{s_id}")
         MockClient.return_value.execute_payout.assert_not_called()
 

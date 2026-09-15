@@ -268,7 +268,7 @@ export default function AgentsPage() {
                               className={`text-[10px] border-2 px-2 py-0.5 inline-block ${
                                 t.decision === "ALLOW" || t.decision === "SUCCEEDED"
                                   ? "border-green-500 text-green-600 bg-[#FDFBF7]"
-                                  : t.decision === "FLAG"
+                                  : t.decision === "REVIEW"
                                   ? "border-amber-500 text-amber-600 bg-[#FDFBF7]"
                                   : "border-red-500 text-red-600 bg-[#FDFBF7]"
                               }`}

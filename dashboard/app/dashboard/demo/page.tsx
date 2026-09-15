@@ -31,7 +31,7 @@ const SCENARIOS: ScenarioCardMeta[] = [
     id: "2",
     name: "Scenario 2 — Policy Violation Block",
     badge: "POLICY GATE",
-    expected: "BLOCK",
+    expected: "DENY",
     description: "Transaction amount (₹100.00) exceeds mandate single transaction cap (₹1.00).",
     agent: "demo_policy_agent",
     amount: "₹100.00",
@@ -41,7 +41,7 @@ const SCENARIOS: ScenarioCardMeta[] = [
     id: "3",
     name: "Scenario 3 — Behavioral Anomaly Flag",
     badge: "RISK ENGINE",
-    expected: "FLAG",
+    expected: "REVIEW",
     description: "Cold-start agent attempting large uncharacteristic payment (₹4,500.00) to new payee.",
     agent: "demo_behavior_agent",
     amount: "₹4,500.00",
@@ -51,7 +51,7 @@ const SCENARIOS: ScenarioCardMeta[] = [
     id: "4",
     name: "Scenario 4 — Untrusted Provenance Flag",
     badge: "PROVENANCE",
-    expected: "FLAG",
+    expected: "REVIEW",
     description: "Payment intent originated from untrusted external content (e.g. scraped email).",
     agent: "demo_provenance_agent",
     amount: "₹1,000.00",
@@ -71,7 +71,7 @@ const SCENARIOS: ScenarioCardMeta[] = [
     id: "6",
     name: "Scenario 6 — Revoked Mandate Block",
     badge: "AUTHORITY",
-    expected: "BLOCK",
+    expected: "DENY",
     description: "Attempt payment request after agent mandate has been explicitly revoked.",
     agent: "demo_revocation_agent",
     amount: "₹100.00",
@@ -142,8 +142,8 @@ export default function DemoPage() {
           const err = errors[sc.id];
 
           const isAllow = sc.expected === "ALLOW";
-          const isBlock = sc.expected === "BLOCK";
-          const isFlag = sc.expected === "FLAG";
+          const isBlock = sc.expected === "DENY";
+          const isFlag = sc.expected === "REVIEW";
 
           return (
             <div
@@ -222,7 +222,7 @@ export default function DemoPage() {
                         className={`font-bold px-3 py-1 border-2 shadow-[2px_2px_0_0_#000] inline-flex items-center space-x-2 ${
                           res.actual_decision === "ALLOW" || res.actual_decision === "SUCCEEDED"
                             ? "border-green-500 text-green-600 bg-[#FDFBF7]"
-                            : res.actual_decision === "FLAG"
+                            : res.actual_decision === "REVIEW"
                             ? "border-amber-500 text-amber-600 bg-[#FDFBF7]"
                             : "border-red-500 text-red-600 bg-[#FDFBF7]"
                         }`}
@@ -231,7 +231,7 @@ export default function DemoPage() {
                           className={`w-2 h-2 rounded-full border-2 ${
                             res.actual_decision === "ALLOW" || res.actual_decision === "SUCCEEDED"
                               ? "bg-green-600 border-green-700"
-                              : res.actual_decision === "FLAG"
+                              : res.actual_decision === "REVIEW"
                               ? "bg-amber-600 border-amber-700"
                               : "bg-red-600 border-red-700"
                           }`}

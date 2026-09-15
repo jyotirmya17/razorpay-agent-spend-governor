@@ -47,6 +47,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
 export const api = {
   getHealth: (): Promise<SystemHealth> => fetchJSON<SystemHealth>("/v1/health"),
   getOverviewStats: (): Promise<OverviewStats> => fetchJSON<OverviewStats>("/v1/overview/stats"),
+  getEvaluationMetrics: (): Promise<any> => fetchJSON<any>("/v1/evaluation/metrics"),
   
   getTransactions: (params?: {
     page?: number;

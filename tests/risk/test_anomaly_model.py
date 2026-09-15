@@ -168,7 +168,10 @@ def test_temporal_training_no_leakage():
     # We grab a validation transaction and ensure its features don't rely on future data.
     val_txn = val_txns[0]
     agent_id = val_txn["agent_id"]
-    
+
+    if agent_id not in profiles:
+        profiles[agent_id] = AgentBehaviorProfile(agent_id=agent_id)
+        
     profile = profiles[agent_id] # State exactly at end of training
     pre_update_feats = extract_features(profile, val_txn)
     

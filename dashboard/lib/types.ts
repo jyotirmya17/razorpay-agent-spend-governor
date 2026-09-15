@@ -1,4 +1,4 @@
-export type DecisionType = "ALLOW" | "FLAG" | "BLOCK" | "IDEMPOTENT_REPLAY" | "UNKNOWN" | "SUCCEEDED";
+export type DecisionType = "ALLOW" | "REVIEW" | "DENY" | "IDEMPOTENT_REPLAY" | "UNKNOWN" | "SUCCEEDED";
 
 export type SourceTrust = "TRUSTED" | "UNTRUSTED" | "UNKNOWN";
 
@@ -31,8 +31,8 @@ export interface OverviewStats {
   total_transactions: number;
   decisions: {
     ALLOW: number;
-    FLAG: number;
-    BLOCK: number;
+    REVIEW: number;
+    DENY: number;
     IDEMPOTENT_REPLAY: number;
   };
 }

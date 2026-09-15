@@ -281,7 +281,7 @@ def orchestrate_payout(
     db.commit()  # Audit is committed before any Razorpay call
 
     # --- Structural gate: BLOCK/FLAG never reach ExecutionService ---
-    if decision in ("BLOCK", "FLAG"):
+    if decision in ("DENY", "REVIEW"):
         # Mark transaction as BLOCKED or FLAGGED
         txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
         if txn:

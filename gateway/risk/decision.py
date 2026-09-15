@@ -40,7 +40,7 @@ def make_risk_decision(
     # 1. Deterministic Policy Violation -> BLOCK (cannot be downgraded)
     if not policy_allowed:
         return {
-            "decision": "BLOCK",
+            "decision": "DENY",
             "reason_codes": reasons,
             "anomaly_score": anomaly_score,
             "model_version": model_version,
@@ -50,12 +50,24 @@ def make_risk_decision(
 
     # Policy passed. Evaluate behavioral risk.
 
-    # 2. Invalid or missing behavioral score -> FLAG (fail-safe; never ALLOW)
+    # 2. Invalid or missing behavioral score -> REVIEW (fail-safe; never ALLOW)
     if anomaly_score is None or not math.isfinite(anomaly_score) or anomaly_score < 0.0 or anomaly_score > 1.0:
         reasons.append("BEHAVIOR_EVALUATION_FAILED")
         reasons.extend(provenance_reasons)  # still aggregate provenance
+        
+        # Provenance risk alone -> DENY (overrides the REVIEW fail-safe)
+        if provenance_reasons:
+            return {
+                "decision": "DENY",
+                "reason_codes": reasons,
+                "anomaly_score": anomaly_score,
+                "model_version": model_version,
+                "policy_result": policy_allowed,
+                "timestamp": now,
+            }
+            
         return {
-            "decision": "FLAG",
+            "decision": "REVIEW",
             "reason_codes": reasons,
             "anomaly_score": anomaly_score,
             "model_version": model_version,
@@ -69,7 +81,7 @@ def make_risk_decision(
             reasons.append("BEHAVIOR_HIGH_RISK")
             reasons.extend(provenance_reasons)
             return {
-                "decision": "BLOCK",
+                "decision": "DENY",
                 "reason_codes": reasons,
                 "anomaly_score": anomaly_score,
                 "model_version": model_version,
@@ -83,7 +95,7 @@ def make_risk_decision(
             reasons.append("BEHAVIOR_HIGH_RISK")
             reasons.extend(provenance_reasons)
             return {
-                "decision": "FLAG",
+                "decision": "REVIEW",
                 "reason_codes": reasons,
                 "anomaly_score": anomaly_score,
                 "model_version": model_version,
@@ -91,12 +103,15 @@ def make_risk_decision(
                 "timestamp": now,
             }
 
-    # 5. Behavioral Flag (above flag threshold)
-    if anomaly_score >= config.flag_threshold:
-        reasons.append("BEHAVIOR_REVIEW_REQUIRED")
+    # 5. Provenance risk -> DENY (authoritative over behavioral flag)
+    if provenance_reasons:
+        if anomaly_score >= config.flag_threshold:
+            reasons.append("BEHAVIOR_REVIEW_REQUIRED")
+        else:
+            reasons.append("BEHAVIOR_LOW_RISK")
         reasons.extend(provenance_reasons)
         return {
-            "decision": "FLAG",
+            "decision": "DENY",
             "reason_codes": reasons,
             "anomaly_score": anomaly_score,
             "model_version": model_version,
@@ -104,12 +119,11 @@ def make_risk_decision(
             "timestamp": now,
         }
 
-    # 6. Provenance risk alone -> FLAG (even when behavior is low risk)
-    if provenance_reasons:
-        reasons.append("BEHAVIOR_LOW_RISK")
-        reasons.extend(provenance_reasons)
+    # 6. Behavioral Flag (above flag threshold)
+    if anomaly_score >= config.flag_threshold:
+        reasons.append("BEHAVIOR_REVIEW_REQUIRED")
         return {
-            "decision": "FLAG",
+            "decision": "REVIEW",
             "reason_codes": reasons,
             "anomaly_score": anomaly_score,
             "model_version": model_version,

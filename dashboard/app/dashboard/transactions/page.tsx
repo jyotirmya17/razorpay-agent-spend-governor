@@ -107,7 +107,7 @@ export default function TransactionsPage() {
             <span>Decision:</span>
           </span>
           <div className="flex space-x-2">
-            {["", "ALLOW", "FLAG", "BLOCK"].map((dec) => (
+            {["", "ALLOW", "REVIEW", "DENY"].map((dec) => (
               <button
                 key={dec}
                 onClick={() => {
@@ -162,7 +162,7 @@ export default function TransactionsPage() {
             <tbody className="divide-y-2 divide-black text-black">
               {transactions.map((t) => {
                 const isAllow = t.decision === "ALLOW" || t.decision === "SUCCEEDED";
-                const isFlag = t.decision === "FLAG";
+                const isFlag = t.decision === "REVIEW";
 
                 return (
                   <tr

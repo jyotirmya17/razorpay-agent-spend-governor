@@ -156,7 +156,7 @@ def test_policy_block_does_not_call_razorpay(client, db_session):
         MockClient.return_value.execute_payout.assert_not_called()
 
     body = resp.json()
-    assert body["decision"] == "BLOCK"
+    assert body["decision"] == "DENY"
     assert "AMOUNT_EXCEEDS_TXN_CAP" in body["reason_codes"]
 
 
@@ -178,14 +178,14 @@ def test_behavioral_flag_does_not_call_razorpay(client, db_session):
             MockClient.return_value.execute_payout.assert_not_called()
 
     body = resp.json()
-    assert body["decision"] == "FLAG"
+    assert body["decision"] == "REVIEW"
     assert "BEHAVIOR_REVIEW_REQUIRED" in body["reason_codes"]
 
 
 # ─── 4. Provenance FLAG ───────────────────────────────────────────────────────
 
-def test_provenance_flag_does_not_call_razorpay(client, db_session):
-    """UNTRUSTED external content provenance -> FLAG even when behavior is low risk."""
+def test_provenance_deny_does_not_call_razorpay(client, db_session):
+    """UNTRUSTED external content provenance -> DENY even when behavior is low risk."""
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_model:
         mock_m = MagicMock()
         mock_m.is_fitted = True
@@ -200,14 +200,14 @@ def test_provenance_flag_does_not_call_razorpay(client, db_session):
             MockClient.return_value.execute_payout.assert_not_called()
 
     body = resp.json()
-    assert body["decision"] == "FLAG"
+    assert body["decision"] == "DENY"
     assert "PROVENANCE_UNTRUSTED_SOURCE" in body["reason_codes"]
 
 
 # ─── 5. Missing provenance -> UNKNOWN -> FLAG ─────────────────────────────────
 
-def test_missing_provenance_defaults_to_unknown_flag(client, db_session):
-    """No provenance field in request -> defaults to UNKNOWN -> FLAG. Never TRUSTED."""
+def test_missing_provenance_defaults_to_unknown_deny(client, db_session):
+    """No provenance field in request -> defaults to UNKNOWN -> DENY. Never TRUSTED."""
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_model:
         mock_m = MagicMock()
         mock_m.is_fitted = True
@@ -222,7 +222,7 @@ def test_missing_provenance_defaults_to_unknown_flag(client, db_session):
             MockClient.return_value.execute_payout.assert_not_called()
 
     body = resp.json()
-    assert body["decision"] == "FLAG"
+    assert body["decision"] == "DENY"
     assert "PROVENANCE_UNKNOWN_SOURCE" in body["reason_codes"]
 
 
@@ -311,7 +311,7 @@ def test_mandate_revocation(client, db_session):
             r2 = client.post("/v1/payouts", json=payout_body("agt_revocation", "idemp_revoc_002", provenance=provenance))
             MockClient.return_value.execute_payout.assert_not_called()
 
-    assert r2.json()["decision"] == "BLOCK"
+    assert r2.json()["decision"] == "DENY"
 
 
 # ─── 9. Model Failure -> FLAG (never ALLOW) ───────────────────────────────────
@@ -329,7 +329,7 @@ def test_model_failure_flags(client, db_session):
             MockClient.return_value.execute_payout.assert_not_called()
 
     body = resp.json()
-    assert body["decision"] == "FLAG"
+    assert body["decision"] == "REVIEW"
     assert "BEHAVIOR_EVALUATION_FAILED" in body["reason_codes"]
 
 
@@ -521,7 +521,7 @@ def test_behavioral_and_provenance_reasons_aggregated(client, db_session):
             MockClient.return_value.execute_payout.assert_not_called()
 
     body = resp.json()
-    assert body["decision"] == "FLAG"
+    assert body["decision"] == "DENY"
     assert "BEHAVIOR_REVIEW_REQUIRED" in body["reason_codes"]
     assert "PROVENANCE_UNTRUSTED_SOURCE" in body["reason_codes"]
 

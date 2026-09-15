@@ -48,9 +48,19 @@ def generate_simulation_profiles(num_agents: int, rng: random.Random = None) -> 
     profiles = []
     agent_types = ["procurement", "saas_billing", "contractor", "travel", "operations", "finance"]
     
-    for _ in range(num_agents):
-        agent_id = f"ag_{rng.getrandbits(48):012x}"
-        agent_type = rng.choice(agent_types)
+    real_agent_ids = ["procurement-agent", "finance-agent", "marketing-agent", "support-agent"]
+    
+    for i in range(num_agents):
+        if i < len(real_agent_ids):
+            agent_id = real_agent_ids[i]
+            # Match types
+            if agent_id == "procurement-agent": agent_type = "procurement"
+            elif agent_id == "finance-agent": agent_type = "finance"
+            elif agent_id == "marketing-agent": agent_type = "saas_billing"
+            else: agent_type = "operations"
+        else:
+            agent_id = f"ag_{rng.getrandbits(48):012x}"
+            agent_type = rng.choice(agent_types)
         
         if agent_type == "saas_billing":
             min_a, max_a = 100000, 1000000 # 1000 to 10000 INR

@@ -116,7 +116,7 @@ def _payout_request(agent_id, idempotency_key, amount=10000, payee_id="ven_test_
 # ==============================================================================
 
 def test_a1_a2_a3_a4_normal_authorized_payout():
-    payload = _payout_request("demo_normal_agent", "key_e2e_a1_normal_1")
+    payload = _payout_request("procurement-agent", "key_e2e_a1_normal_1")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         mock_client = MagicMock()
@@ -136,7 +136,7 @@ def test_a1_a2_a3_a4_normal_authorized_payout():
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert data["decision"] in ("ALLOW", "FLAG")
+        assert data["decision"] in ("ALLOW", "REVIEW")
         assert data["razorpay_payout_id"] == "pout_test_a1_real"
 
         # Verify DB state
@@ -160,82 +160,82 @@ def test_a1_a2_a3_a4_normal_authorized_payout():
 
 def test_b1_revoked_mandate():
     db = TestingSession()
-    m = db.query(Mandate).filter_by(mandate_id="man_demo_revocation").first()
+    m = db.query(Mandate).filter_by(mandate_id="man_support").first()
     if m:
         m.status = "REVOKED"
         db.commit()
     db.close()
 
-    payload = _payout_request("demo_revocation_agent", "key_b1_revoked")
+    payload = _payout_request("support-agent", "key_b1_revoked")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] == "BLOCK"
+        assert data["decision"] == "DENY"
         assert "MANDATE_NOT_FOUND_OR_REVOKED" in data.get("reason_codes", []) or "MANDATE_REVOKED" in data.get("reason_codes", [])
         mock_client_cls.assert_not_called()
 
 
 def test_b2_expired_mandate():
     db = TestingSession()
-    m = db.query(Mandate).filter_by(mandate_id="man_demo_policy").first()
+    m = db.query(Mandate).filter_by(mandate_id="man_finance").first()
     if m:
         m.expires_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
         db.commit()
     db.close()
 
-    payload = _payout_request("demo_policy_agent", "key_b2_expired", amount=10)
+    payload = _payout_request("finance-agent", "key_b2_expired", amount=10)
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] == "BLOCK"
+        assert data["decision"] == "DENY"
         assert "MANDATE_EXPIRED" in data.get("reason_codes", [])
         mock_client_cls.assert_not_called()
 
 
 def test_b3_txn_cap_exceeded():
-    payload = _payout_request("demo_policy_agent", "key_b3_txn_cap", amount=600000)
+    payload = _payout_request("finance-agent", "key_b3_txn_cap", amount=600000)
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] == "BLOCK"
+        assert data["decision"] == "DENY"
         assert "AMOUNT_EXCEEDS_TXN_CAP" in data.get("reason_codes", []) or "TXN_CAP_EXCEEDED" in data.get("reason_codes", [])
         mock_client_cls.assert_not_called()
 
 
 def test_b4_daily_cap_exceeded():
     db = TestingSession()
-    u = db.query(MandateUsage).filter_by(mandate_id="man_demo_policy").first()
+    u = db.query(MandateUsage).filter_by(mandate_id="man_finance").first()
     if u:
         u.daily_usage = 950000  # Daily cap is 500,000
         db.commit()
     db.close()
 
     # Use amount 50 (within txn_cap=100) to trigger daily_cap check
-    payload = _payout_request("demo_policy_agent", "key_b4_daily_cap", amount=50)
+    payload = _payout_request("finance-agent", "key_b4_daily_cap", amount=50)
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] == "BLOCK"
+        assert data["decision"] == "DENY"
         assert any(c in data.get("reason_codes", []) for c in ("DAILY_CAP_EXCEEDED", "AMOUNT_EXCEEDS_TXN_CAP"))
         mock_client_cls.assert_not_called()
 
 
 def test_b6_disallowed_category():
-    payload = _payout_request("demo_policy_agent", "key_b6_disallowed_cat", amount=5, category="gambling")
+    payload = _payout_request("finance-agent", "key_b6_disallowed_cat", amount=5, category="gambling")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] == "BLOCK"
+        assert data["decision"] == "DENY"
         assert "CATEGORY_NOT_ALLOWED" in data.get("reason_codes", [])
         mock_client_cls.assert_not_called()
 
@@ -245,19 +245,19 @@ def test_b6_disallowed_category():
 # ==============================================================================
 
 def test_c1_c9_c10_high_anomaly_behavior():
-    payload = _payout_request("demo_behavior_agent", "key_c1_behavior_high", amount=450000, payee_id="ven_suspicious_unseen", category="software")
+    payload = _payout_request("marketing-agent", "key_c1_behavior_high", amount=450000, payee_id="ven_suspicious_unseen", category="software")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] in ("FLAG", "BLOCK")
+        assert data["decision"] in ("REVIEW", "DENY")
         assert data["anomaly_score"] is not None
         mock_client_cls.assert_not_called()
 
 
 def test_c4_c5_c6_c7_c8_model_failure_fail_safe():
-    payload = _payout_request("demo_normal_agent", "key_c7_model_fail", amount=1000)
+    payload = _payout_request("procurement-agent", "key_c7_model_fail", amount=1000)
 
     # Simulate model prediction failure
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_get_model:
@@ -269,7 +269,7 @@ def test_c4_c5_c6_c7_c8_model_failure_fail_safe():
             resp = client.post("/v1/payouts", json=payload)
             assert resp.status_code == 200
             data = resp.json()
-            assert data["decision"] in ("FLAG", "BLOCK")
+            assert data["decision"] in ("REVIEW", "DENY")
             mock_client_cls.assert_not_called()
 
 
@@ -278,25 +278,25 @@ def test_c4_c5_c6_c7_c8_model_failure_fail_safe():
 # ==============================================================================
 
 def test_d2_missing_provenance():
-    payload = _payout_request("demo_normal_agent", "key_d2_missing_prov", amount=1000, provenance=None)
+    payload = _payout_request("procurement-agent", "key_d2_missing_prov", amount=1000, provenance=None)
     payload.pop("provenance", None)  # Omit provenance key
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] in ("FLAG", "BLOCK")
+        assert data["decision"] in ("REVIEW", "DENY")
         mock_client_cls.assert_not_called()
 
 
 def test_d6_d8_untrusted_provenance():
-    payload = _payout_request("demo_provenance_agent", "key_d6_untrusted_prov", amount=10000, provenance=_untrusted_provenance())
+    payload = _payout_request("support-agent", "key_d6_untrusted_prov", amount=10000, provenance=_untrusted_provenance())
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] in ("FLAG", "BLOCK")
+        assert data["decision"] in ("REVIEW", "DENY")
         mock_client_cls.assert_not_called()
 
 
@@ -305,7 +305,7 @@ def test_d6_d8_untrusted_provenance():
 # ==============================================================================
 
 def test_e1_e5_idempotent_replay():
-    payload = _payout_request("demo_normal_agent", "key_e1_replay_1")
+    payload = _payout_request("procurement-agent", "key_e1_replay_1")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         mock_client = MagicMock()
@@ -338,7 +338,7 @@ def test_e1_e5_idempotent_replay():
 
 
 def test_e2_same_key_modified_payload_conflict():
-    payload1 = _payout_request("demo_normal_agent", "key_e2_conflict_1", amount=10000)
+    payload1 = _payout_request("procurement-agent", "key_e2_conflict_1", amount=10000)
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         mock_client = MagicMock()
@@ -362,7 +362,7 @@ def test_e2_same_key_modified_payload_conflict():
 # ==============================================================================
 
 def test_g1_g2_permanent_failure_400():
-    payload = _payout_request("demo_normal_agent", "key_g1_fail_400")
+    payload = _payout_request("procurement-agent", "key_g1_fail_400")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         mock_client = MagicMock()
@@ -381,7 +381,7 @@ def test_g1_g2_permanent_failure_400():
 
 
 def test_g7_g8_network_timeout_unknown_state():
-    payload = _payout_request("demo_normal_agent", "key_g8_timeout")
+    payload = _payout_request("procurement-agent", "key_g8_timeout")
 
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         mock_client = MagicMock()
@@ -432,28 +432,28 @@ def test_i1_i2_i3_i4_audit_tamper_detection():
 # ==============================================================================
 
 def test_j1_negative_amount():
-    payload = _payout_request("demo_normal_agent", "key_j1_neg", amount=-5000)
+    payload = _payout_request("procurement-agent", "key_j1_neg", amount=-5000)
     resp = client.post("/v1/payouts", json=payload)
     assert resp.status_code == 422
 
 
 def test_j2_zero_amount():
-    payload = _payout_request("demo_normal_agent", "key_j2_zero", amount=0)
+    payload = _payout_request("procurement-agent", "key_j2_zero", amount=0)
     resp = client.post("/v1/payouts", json=payload)
     assert resp.status_code == 422
 
 
 def test_j3_extremely_large_amount():
-    payload = _payout_request("demo_normal_agent", "key_j3_huge", amount=999_999_999_999)
+    payload = _payout_request("procurement-agent", "key_j3_huge", amount=999_999_999_999)
     resp = client.post("/v1/payouts", json=payload)
     assert resp.status_code in (200, 422)
     if resp.status_code == 200:
         data = resp.json()
-        assert data["decision"] in ("BLOCK", "FLAG")  # Blocked by cap or flagged by risk
+        assert data["decision"] in ("DENY", "REVIEW")  # Blocked by cap or flagged by risk
 
 
 def test_j7_missing_or_empty_idempotency_key():
-    payload = _payout_request("demo_normal_agent", "key_j7_test", amount=1000)
+    payload = _payout_request("procurement-agent", "key_j7_test", amount=1000)
     payload.pop("idempotency_key", None)
     resp = client.post("/v1/payouts", json=payload)
     assert resp.status_code == 422
@@ -461,18 +461,18 @@ def test_j7_missing_or_empty_idempotency_key():
 
 def test_j8_extremely_long_idempotency_key():
     long_key = "k" * 300
-    payload = _payout_request("demo_normal_agent", long_key, amount=1000)
+    payload = _payout_request("procurement-agent", long_key, amount=1000)
     resp = client.post("/v1/payouts", json=payload)
     assert resp.status_code in (200, 422)
 
 
 def test_j11_j12_sqli_xss_input_strings():
-    payload = _payout_request("demo_normal_agent", "key_j11_sqli", amount=1000, payee_id="ven_test' OR '1'='1; <script>alert(1)</script>")
+    payload = _payout_request("procurement-agent", "key_j11_sqli", amount=1000, payee_id="ven_test' OR '1'='1; <script>alert(1)</script>")
     with patch("execution.service.RazorpayXClient") as mock_client_cls:
         resp = client.post("/v1/payouts", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["decision"] in ("ALLOW", "FLAG", "BLOCK")
+        assert data["decision"] in ("ALLOW", "REVIEW", "DENY")
 
 
 def test_h8_invalid_webhook_hmac():

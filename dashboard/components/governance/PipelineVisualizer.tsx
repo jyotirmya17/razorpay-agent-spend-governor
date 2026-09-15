@@ -22,8 +22,8 @@ export function PipelineVisualizer({ data }: PipelineVisualizerProps) {
 
   const decVal = decision.decision;
   const isAllow = decVal === "ALLOW" || decVal === "SUCCEEDED";
-  const isBlock = decVal === "BLOCK";
-  const isFlag = decVal === "FLAG";
+  const isBlock = decVal === "DENY";
+  const isFlag = decVal === "REVIEW";
 
   return (
     <div className="space-y-6">

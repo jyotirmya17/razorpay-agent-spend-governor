@@ -109,6 +109,17 @@ def deny_payout(request: Request, txn_id: str, db: Session = Depends(get_db)):
 
 # ─── Phase 5 Read & Management Endpoints ─────────────────────────────────────
 
+@router.get("/v1/evaluation/metrics")
+def get_evaluation_metrics():
+    import json
+    import os
+    json_path = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "evaluation_metrics.json")
+    if os.path.exists(json_path):
+        with open(json_path, "r") as f:
+            return json.load(f)
+    return {}
+
+
 @router.get("/v1/health")
 def get_health(db: Session = Depends(get_db)):
     """Genuine system status for DB, API, Risk Engine, RazorpayX Test Mode, and Audit Chain."""
@@ -194,7 +205,7 @@ def get_overview_stats(db: Session = Depends(get_db)):
         .all()
     )
 
-    counts = {"ALLOW": 0, "FLAG": 0, "BLOCK": 0, "IDEMPOTENT_REPLAY": 0}
+    counts = {"ALLOW": 0, "REVIEW": 0, "DENY": 0, "IDEMPOTENT_REPLAY": 0}
     for ev in decision_events:
         try:
             p = json.loads(ev.payload)
@@ -619,7 +630,7 @@ def get_risk_overview(db: Session = Depends(get_db)):
     scores = []
     reasons_freq = {}
     prov_flags_count = 0
-    decision_counts = {"ALLOW": 0, "FLAG": 0, "BLOCK": 0}
+    decision_counts = {"ALLOW": 0, "REVIEW": 0, "DENY": 0}
 
     for ev in decision_events:
         try:
@@ -783,12 +794,12 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
 
     scenarios_meta = {
         "1": {
-            "name": "Normal Authorized Payout",
+            "name": "Safe Transaction",
             "description": "Valid agent request within policy mandate.",
             "expected_decision": "ALLOW",
-            "agent_id": "demo_normal_agent",
+            "agent_id": "procurement-agent",
             "idempotency_key": f"demo_key_1_{unique_suffix}",
-            "amount": 10000, # 100 INR
+            "amount": 10000,
             "payee_id": get_config().demo_fund_account_id,
             "category": "cloud",
             "provenance": ProvenanceData(
@@ -799,14 +810,14 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
             ),
         },
         "2": {
-            "name": "Policy Violation",
-            "description": "Txn amount (100 INR) exceeds policy cap (1 INR).",
-            "expected_decision": "BLOCK",
-            "agent_id": "demo_policy_agent",
+            "name": "Limit Violation",
+            "description": "Txn amount exceeds policy cap.",
+            "expected_decision": "DENY",
+            "agent_id": "finance-agent",
             "idempotency_key": f"demo_key_2_{unique_suffix}",
-            "amount": 10000, # 100 INR (cap is 100 paise = 1 INR)
+            "amount": 15000000,
             "payee_id": "ven_test_policy",
-            "category": "cloud",
+            "category": "finance",
             "provenance": ProvenanceData(
                 source_type="TRUSTED_TASK",
                 source_id="task_policy_check",
@@ -817,12 +828,12 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
         "3": {
             "name": "Behavioral Anomaly",
             "description": "Cold-start agent attempting large uncharacteristic payment.",
-            "expected_decision": "FLAG",
-            "agent_id": "demo_behavior_agent",
+            "expected_decision": "REVIEW",
+            "agent_id": "marketing-agent",
             "idempotency_key": f"demo_key_3_{unique_suffix}",
-            "amount": 450000, # 4,500 INR
+            "amount": 450000,
             "payee_id": "brand_new_vendor",
-            "category": "software",
+            "category": "ads",
             "provenance": ProvenanceData(
                 source_type="TRUSTED_TASK",
                 source_id="task_behavior_check",
@@ -831,14 +842,14 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
             ),
         },
         "4": {
-            "name": "Untrusted Provenance",
-            "description": "Payment intent originated from untrusted external content.",
-            "expected_decision": "FLAG",
-            "agent_id": "demo_provenance_agent",
+            "name": "Prompt Injection Attempt",
+            "description": "Payment intent originated from untrusted external content (e.g. prompt injection in email).",
+            "expected_decision": "DENY",
+            "agent_id": "support-agent",
             "idempotency_key": f"demo_key_4_{unique_suffix}",
-            "amount": 100000, # 1,000 INR
-            "payee_id": "ven_test_prov",
-            "category": "cloud",
+            "amount": 500000,
+            "payee_id": "attacker_account",
+            "category": "refunds",
             "provenance": ProvenanceData(
                 source_type="EXTERNAL_CONTENT",
                 source_id="scraped_email_123",
@@ -847,30 +858,46 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
             ),
         },
         "5": {
-            "name": "Idempotent Replay",
-            "description": "Repeated request with identical idempotency key returns replay.",
-            "expected_decision": "IDEMPOTENT_REPLAY",
-            "agent_id": "demo_normal_agent",
-            "idempotency_key": f"demo_key_replay_{unique_suffix}",
-            "amount": 10000,
-            "payee_id": get_config().demo_fund_account_id,
-            "category": "cloud",
+            "name": "Untrusted Beneficiary",
+            "description": "Payment to a new/untrusted beneficiary.",
+            "expected_decision": "REVIEW",
+            "agent_id": "finance-agent",
+            "idempotency_key": f"demo_key_5_{unique_suffix}",
+            "amount": 50000,
+            "payee_id": "new_untrusted_vendor",
+            "category": "finance",
             "provenance": ProvenanceData(
                 source_type="TRUSTED_TASK",
-                source_id="task_monthly_infra",
+                source_id="task_vendor_payment",
                 source_trust="TRUSTED",
                 payment_intent_origin="AGENT_TOOL",
             ),
         },
         "6": {
+            "name": "Idempotent Replay",
+            "description": "Repeated request with identical idempotency key returns replay.",
+            "expected_decision": "IDEMPOTENT_REPLAY",
+            "agent_id": "marketing-agent",
+            "idempotency_key": f"demo_key_replay_{unique_suffix}",
+            "amount": 25000,
+            "payee_id": get_config().demo_fund_account_id,
+            "category": "ads",
+            "provenance": ProvenanceData(
+                source_type="TRUSTED_TASK",
+                source_id="task_monthly_ads",
+                source_trust="TRUSTED",
+                payment_intent_origin="AGENT_TOOL",
+            ),
+        },
+        "7": {
             "name": "Revoked Mandate",
             "description": "Attempt payment after agent mandate has been revoked.",
-            "expected_decision": "BLOCK",
-            "agent_id": "demo_revocation_agent",
-            "idempotency_key": f"demo_key_6_{unique_suffix}",
+            "expected_decision": "DENY",
+            "agent_id": "support-agent",
+            "idempotency_key": f"demo_key_7_{unique_suffix}",
             "amount": 10000,
             "payee_id": "ven_test_revoc",
-            "category": "cloud",
+            "category": "refunds",
             "provenance": ProvenanceData(
                 source_type="TRUSTED_TASK",
                 source_id="task_revoc_check",
@@ -878,17 +905,33 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
                 payment_intent_origin="AGENT_TOOL",
             ),
         },
+        "8": {
+            "name": "Velocity Cap Exceeded",
+            "description": "Agent has exceeded its weekly limit.",
+            "expected_decision": "DENY",
+            "agent_id": "marketing-agent",
+            "idempotency_key": f"demo_key_8_{unique_suffix}",
+            "amount": 3000000,
+            "payee_id": "ven_test_velocity",
+            "category": "ads",
+            "provenance": ProvenanceData(
+                source_type="TRUSTED_TASK",
+                source_id="task_velocity_check",
+                source_trust="TRUSTED",
+                payment_intent_origin="AGENT_TOOL",
+            ),
+        },
     }
 
-    if scenario_id not in scenarios_meta:
-        raise HTTPException(status_code=404, detail="Scenario ID must be between 1 and 6")
+    if int(scenario_id) < 1 or int(scenario_id) > 8:
+        raise HTTPException(status_code=404, detail="Scenario ID must be between 1 and 8")
 
     meta = scenarios_meta[scenario_id]
 
     req_id = f"req_demo_{scenario_id}_{unique_suffix}"
 
-    # Special handling for Scenario 5: run once first if not present
-    if scenario_id == "5":
+    # Special handling for Scenario 6: run once first if not present
+    if scenario_id == "6":
         req = PayoutRequest(
             agent_id=meta["agent_id"],
             request_id=req_id,
@@ -900,9 +943,9 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
         )
         create_payout(request=request, payload=req, db=db)
 
-    # Special handling for Scenario 6: revoke mandate first
-    if scenario_id == "6":
-        mandate = db.query(Mandate).filter_by(agent_id="demo_revocation_agent").first()
+    # Special handling for Scenario 7: revoke mandate first
+    if scenario_id == "7":
+        mandate = db.query(Mandate).filter_by(agent_id="support-agent").first()
         if mandate:
             mandate.status = "REVOKED"
             db.commit()

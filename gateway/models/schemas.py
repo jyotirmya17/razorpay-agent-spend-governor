@@ -5,8 +5,8 @@ from enum import Enum
 
 class DecisionEnum(str, Enum):
     ALLOW = "ALLOW"
-    BLOCK = "BLOCK"
-    FLAG_FOR_REVIEW = "FLAG_FOR_REVIEW"
+    DENY = "DENY"
+    REVIEW = "REVIEW"
 
 class ProvenanceData(BaseModel):
     source_type: str = Field(..., description="e.g., TRUSTED_TASK, EXTERNAL_CONTENT")

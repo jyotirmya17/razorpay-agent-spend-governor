@@ -2,11 +2,11 @@
 seed_demo.py — Deterministic demo fixture seeder for Phase 4.7.
 
 Agents seeded (demo-only; do NOT use in production):
-  demo_normal_agent      — active mandate, normal transaction history
-  demo_policy_agent      — active mandate with a very low txn_cap (triggers BLOCK)
-  demo_behavior_agent    — active mandate, no transaction history (cold-start -> high anomaly)
-  demo_provenance_agent  — active mandate, no provenance supplied in request
-  demo_revocation_agent  — mandate will be revoked to demonstrate BLOCK on revocation
+  procurement-agent      — active mandate, normal transaction history
+  finance-agent      — active mandate with a very low txn_cap (triggers BLOCK)
+  marketing-agent    — active mandate, no transaction history (cold-start -> high anomaly)
+  support-agent  — active mandate, no provenance supplied in request
+  support-agent  — mandate will be revoked to demonstrate BLOCK on revocation
 
 All amounts and IDs are synthetic.
 No real Razorpay payout IDs are fabricated here.
@@ -33,12 +33,12 @@ def seed(db=None):
         now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         # Clean up transient scenario executions so velocity feature remains baseline-clean
-        demo_agent_ids = ["demo_normal_agent", "demo_policy_agent", "demo_behavior_agent", "demo_provenance_agent", "demo_revocation_agent"]
+        demo_agent_ids = ["procurement-agent", "finance-agent", "marketing-agent", "support-agent"]
         db.query(ProvenanceRecord).delete(synchronize_session=False)
         db.query(Transaction).filter(Transaction.agent_id.in_(demo_agent_ids)).delete(synchronize_session=False)
 
         # Reset demo mandate usage and status to clean baseline
-        demo_mandate_ids = ["man_demo_normal", "man_demo_policy", "man_demo_behavior", "man_demo_provenance", "man_demo_revocation"]
+        demo_mandate_ids = ["man_procurement", "man_finance", "man_marketing", "man_support"]
         db.query(MandateUsage).filter(MandateUsage.mandate_id.in_(demo_mandate_ids)).update(
             {MandateUsage.daily_usage: 0, MandateUsage.weekly_usage: 0},
             synchronize_session=False,
@@ -50,11 +50,10 @@ def seed(db=None):
         db.commit()
 
         demo_agents = [
-            ("demo_normal_agent",      "Demo Normal Agent"),
-            ("demo_policy_agent",      "Demo Policy Agent"),
-            ("demo_behavior_agent",    "Demo Behavior Agent"),
-            ("demo_provenance_agent",  "Demo Provenance Agent"),
-            ("demo_revocation_agent",  "Demo Revocation Agent"),
+            ("procurement-agent", "Procurement Agent"),
+            ("finance-agent",     "Finance Agent"),
+            ("marketing-agent",   "Marketing Agent"),
+            ("support-agent",     "Support Agent"),
         ]
 
         for agent_id, name in demo_agents:
@@ -64,11 +63,10 @@ def seed(db=None):
 
         mandates = [
             # (mandate_id, agent_id, daily_cap, weekly_cap, txn_cap, categories)
-            ("man_demo_normal",      "demo_normal_agent",      500_000, 2_000_000, 500_000, ["cloud", "software", "vendor"]),
-            ("man_demo_policy",      "demo_policy_agent",      500_000, 2_000_000,     100, ["cloud"]),  # txn_cap=1 INR -> BLOCK
-            ("man_demo_behavior",    "demo_behavior_agent",    500_000, 2_000_000, 500_000, ["cloud", "software"]),
-            ("man_demo_provenance",  "demo_provenance_agent",  500_000, 2_000_000, 500_000, ["cloud"]),
-            ("man_demo_revocation",  "demo_revocation_agent",  500_000, 2_000_000, 500_000, ["cloud"]),
+            ("man_procurement", "procurement-agent", 500_000, 2_000_000, 500_000, ["cloud", "software", "vendor"]),
+            ("man_finance",     "finance-agent",     500_000, 2_000_000, 100_000, ["cloud", "finance"]),  
+            ("man_marketing",   "marketing-agent",   500_000, 2_000_000, 500_000, ["cloud", "software", "ads"]),
+            ("man_support",     "support-agent",     500_000, 2_000_000, 500_000, ["cloud", "refunds"]),
         ]
 
         for mandate_id, agent_id, daily_cap, weekly_cap, txn_cap, cats in mandates:
@@ -162,9 +160,9 @@ def seed(db=None):
                     status="SUCCEEDED", razorpay_payout_id=f"pout_bg3_{i}"
                 ))
 
-        # Seed historical SUCCEEDED transactions for demo_normal_agent to establish normal baseline profile
+        # Seed historical SUCCEEDED transactions for procurement-agent to establish normal baseline profile
         demo_payee_id = get_config().demo_fund_account_id
-        if db.query(Transaction).filter(Transaction.agent_id == "demo_normal_agent", Transaction.txn_id.like("demo_normal_hist_%")).count() == 0:
+        if db.query(Transaction).filter(Transaction.agent_id == "procurement-agent", Transaction.txn_id.like("demo_normal_hist_%")).count() == 0:
             rng = random.Random(42)
             for d in range(48, 0, -1):
                 amt = 10000 + rng.randint(-200, 200)
@@ -172,7 +170,7 @@ def seed(db=None):
                 payee = demo_payee_id if d % 2 == 0 else "ven_test_normal"
                 db.add(Transaction(
                     txn_id=f"demo_normal_hist_{d}",
-                    agent_id="demo_normal_agent",
+                    agent_id="procurement-agent",
                     payee_id=payee,
                     category="cloud",
                     amount=amt,

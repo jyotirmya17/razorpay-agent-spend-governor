@@ -21,20 +21,23 @@ export default function OverviewPage() {
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [recentTxns, setRecentTxns] = useState<TransactionSummary[]>([]);
   const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [evalMetrics, setEvalMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
       setError(null);
-      const [s, t, h] = await Promise.all([
+      const [s, t, h, m] = await Promise.all([
         api.getOverviewStats(),
         api.getTransactions({ page: 1, page_size: 6 }),
         api.getHealth(),
+        api.getEvaluationMetrics(),
       ]);
       setStats(s);
       setRecentTxns(t.items || []);
       setHealth(h);
+      setEvalMetrics(m);
     } catch (err: any) {
       setError(err.message || "Failed to load governor overview");
     } finally {
@@ -70,11 +73,17 @@ export default function OverviewPage() {
       {/* Intro for Judges - Explaining the Product clearly */}
       <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 lg:p-8 flex flex-col lg:flex-row gap-8 justify-between relative overflow-hidden">
         <div className="max-w-3xl space-y-4">
-          <div className="inline-flex items-center space-x-2 bg-black text-[#FDFBF7] px-3 py-1 text-xs font-mono font-bold uppercase tracking-widest border-2 border-black shadow-[2px_2px_0_0_#000]">
-            <Shield className="w-3.5 h-3.5" />
-            <span>Razorpay AI Buildathon 2026</span>
+          <div className="inline-flex items-center space-x-4">
+            <div className="inline-flex items-center space-x-2 bg-black text-[#FDFBF7] px-3 py-1 text-xs font-mono font-bold uppercase tracking-widest border-2 border-black shadow-[2px_2px_0_0_#000]">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Razorpay AI Buildathon 2026</span>
+            </div>
+            <div className="inline-flex items-center space-x-2 bg-yellow-400 text-black px-3 py-1 text-xs font-mono font-bold uppercase tracking-widest border-2 border-black shadow-[2px_2px_0_0_#000] animate-pulse">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>DEMO ENVIRO</span>
+            </div>
           </div>
-          <h2 className="text-3xl lg:text-4xl font-bold text-black tracking-tight font-mono uppercase">
+          <h2 className="text-3xl lg:text-4xl font-bold text-black tracking-tight font-mono uppercase mt-4">
             Agent Spend Governor
           </h2>
           <p className="text-black/80 text-sm lg:text-base leading-relaxed font-bold font-mono tracking-wide">
@@ -137,9 +146,9 @@ export default function OverviewPage() {
           <div className="absolute top-0 left-0 w-full h-2 bg-amber-400 border-b-2 border-black" />
           <div className="flex justify-between items-start pt-2">
             <div>
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">FLAG Decisions</span>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">REVIEW Decisions</span>
               <p className="text-4xl font-bold font-mono tabular-nums text-black">
-                {stats?.decisions?.FLAG || 0}
+                {stats?.decisions?.REVIEW || 0}
               </p>
             </div>
             <div className="bg-amber-400 border-2 border-black p-2 shadow-[2px_2px_0_0_#000]">
@@ -155,9 +164,9 @@ export default function OverviewPage() {
           <div className="absolute top-0 left-0 w-full h-2 bg-red-500 border-b-2 border-black" />
           <div className="flex justify-between items-start pt-2">
             <div>
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">BLOCK Decisions</span>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-black/60 block mb-1">DENY Decisions</span>
               <p className="text-4xl font-bold font-mono tabular-nums text-black">
-                {stats?.decisions?.BLOCK || 0}
+                {stats?.decisions?.DENY || 0}
               </p>
             </div>
             <div className="bg-red-500 border-2 border-black p-2 shadow-[2px_2px_0_0_#000]">
@@ -252,6 +261,40 @@ export default function OverviewPage() {
         </div>
       </div>
 
+      {/* ML Evaluation Metrics */}
+      {evalMetrics && Object.keys(evalMetrics).length > 0 && (
+        <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 lg:p-8 space-y-6">
+          <div className="flex items-center justify-between border-b-2 border-black pb-4">
+            <h3 className="text-sm lg:text-base font-bold text-black font-mono uppercase tracking-widest flex items-center space-x-2">
+              <Activity className="w-5 h-5" />
+              <span>Offline Risk Model Evaluation (Phase 4.6)</span>
+            </h3>
+            <span className="text-[10px] hidden md:inline-block font-mono font-bold bg-amber-200 text-black px-3 py-1 uppercase tracking-widest border-2 border-black">
+              Isolation Forest @ 0.42 Threshold
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="border-2 border-black p-4 bg-black/5 flex flex-col justify-between">
+              <span className="text-[10px] font-mono font-bold text-black/60 uppercase tracking-widest">Unseen Agent FPR</span>
+              <span className="text-xl font-bold font-mono">{(evalMetrics.false_positive_rate * 100).toFixed(2)}%</span>
+            </div>
+            <div className="border-2 border-black p-4 bg-black/5 flex flex-col justify-between">
+              <span className="text-[10px] font-mono font-bold text-black/60 uppercase tracking-widest">F1 Score</span>
+              <span className="text-xl font-bold font-mono">{evalMetrics.f1_score?.toFixed(3)}</span>
+            </div>
+            <div className="border-2 border-black p-4 bg-black/5 flex flex-col justify-between">
+              <span className="text-[10px] font-mono font-bold text-black/60 uppercase tracking-widest">Burst Recall</span>
+              <span className="text-xl font-bold font-mono">{(evalMetrics.recall_burst * 100).toFixed(2)}%</span>
+            </div>
+            <div className="border-2 border-black p-4 bg-black/5 flex flex-col justify-between">
+              <span className="text-[10px] font-mono font-bold text-black/60 uppercase tracking-widest">Spike Recall</span>
+              <span className="text-xl font-bold font-mono">{(evalMetrics.recall_spike * 100).toFixed(2)}%</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Live Governance Feed */}
       <div className="bg-[#FDFBF7] border-2 border-black shadow-[8px_8px_0_0_#000] p-6 lg:p-8 space-y-6">
         <div className="flex items-center justify-between border-b-2 border-black pb-4">
@@ -284,7 +327,7 @@ export default function OverviewPage() {
                     className={`w-3 h-3 border-2 border-black shadow-[2px_2px_0_0_#000] flex-shrink-0 mt-1 md:mt-0 ${
                       t.decision === "ALLOW" || t.decision === "SUCCEEDED"
                         ? "bg-green-400"
-                        : t.decision === "FLAG"
+                        : t.decision === "REVIEW"
                         ? "bg-amber-400"
                         : "bg-red-500"
                     }`}
@@ -316,7 +359,7 @@ export default function OverviewPage() {
                       className={`inline-block border-2 border-black px-3 py-1 shadow-[2px_2px_0_0_#000] ${
                         t.decision === "ALLOW" || t.decision === "SUCCEEDED"
                           ? "bg-green-400 text-black"
-                          : t.decision === "FLAG"
+                          : t.decision === "REVIEW"
                           ? "bg-amber-400 text-black"
                           : "bg-red-500 text-white"
                       }`}

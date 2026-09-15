@@ -347,6 +347,26 @@ def main():
         f.write("4. **Cold start handling required?** No immediate change to code; unseen FPR drops as history builds.\n")
         f.write("5. **Model/Feature changes justified?** None. Simple rules still outperform IF on aggregate cost/F1, reinforcing the necessity to operate the ML layer in shadow/FLAG mode.\n")
 
+    # Output JSON metrics for the frontend Dashboard
+    import json
+    metrics_data = {
+        "false_positive_rate": overall_unseen_fpr,
+        "false_negatives": test_metrics.fn,
+        "false_positives": test_metrics.fp,
+        "total_cost": test_metrics.expected_cost,
+        "f1_score": test_metrics.f1,
+        "recall_burst": recall_analysis.get("BURST_ACTIVITY", {}).get("recall", 0.0),
+        "recall_spike": recall_analysis.get("SPEND_SPIKE", {}).get("recall", 0.0),
+        "rules_cost": baseline_b_metrics.expected_cost,
+        "rules_f1": baseline_b_metrics.f1,
+    }
+    
+    json_path = os.path.join(os.path.dirname(__file__), "..", "docs", "evaluation_metrics.json")
+    with open(json_path, "w") as f:
+        json.dump(metrics_data, f, indent=2)
+
+    print(f"Metrics saved to {json_path}")
+
     print("Analysis complete. Report generated at docs/phase4_6_adversarial_validation.md")
 
 if __name__ == "__main__":
