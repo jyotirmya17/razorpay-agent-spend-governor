@@ -1,5 +1,5 @@
 import json
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, Boolean, ForeignKey, JSON
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, Boolean, ForeignKey, JSON, text
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime, timezone
 
@@ -102,8 +102,8 @@ def init_db():
         with engine.begin() as conn:
             conn.execute(text("ALTER TABLE agents ADD COLUMN is_active BOOLEAN DEFAULT TRUE NOT NULL"))
     except Exception as e:
-        # Ignore if column already exists
-        pass
+        import logging
+        logging.warning(f"Ignored DB init exception (likely column exists): {e}")
 
 class WebhookEvent(Base):
     __tablename__ = "webhook_events"
