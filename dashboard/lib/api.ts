@@ -13,7 +13,14 @@ import {
   DemoScenarioResult,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+let API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_API_URL is not set. Production must not fall back to localhost.");
+  }
+  API_BASE = "http://127.0.0.1:8000";
+}
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
