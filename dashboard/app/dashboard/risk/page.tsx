@@ -96,7 +96,7 @@ export default function RiskPage() {
               <p className="text-4xl font-bold text-black mt-3 tabular-nums">
                 {riskData?.score_buckets?.elevated_05_07 || 0}
               </p>
-              <span className="text-[10px] text-black/70 block mt-2 leading-tight bg-black/5 px-2 py-1">Flagged for review</span>
+              <span className="text-[10px] text-black/70 block mt-2 leading-tight bg-black/5 px-2 py-1">Review required</span>
             </div>
 
             <div className="bg-[#FDFBF7] border-2 border-red-500 shadow-[6px_6px_0_0_#ef4444] p-5 hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#ef4444] transition-all text-black">

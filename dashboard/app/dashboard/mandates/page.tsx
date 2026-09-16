@@ -159,7 +159,7 @@ export default function MandatesPage() {
             <div className="p-4 bg-[#FDFBF7] text-red-600 border-2 border-red-500 shadow-[4px_4px_0_0_#ef4444] text-[11px] space-y-2">
               <p className="underline underline-offset-4 decoration-red-500/30">Immediate Governance Effect:</p>
               <p className="opacity-90">
-                All subsequent payout requests from agent <strong>{revokingMandate.agent_id}</strong> will pass through the Governor policy engine and be strictly <strong>BLOCKED</strong>.
+                All subsequent payout requests from agent <strong>{revokingMandate.agent_id}</strong> will pass through the Governor policy engine and be strictly <strong>DENIED</strong>.
               </p>
             </div>
 

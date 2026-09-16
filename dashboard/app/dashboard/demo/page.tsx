@@ -29,37 +29,37 @@ const SCENARIOS: ScenarioCardMeta[] = [
   },
   {
     id: "2",
-    name: "Scenario 2 — Policy Violation Block",
+    name: "Scenario 2 — Policy Violation Deny",
     badge: "POLICY GATE",
     expected: "DENY",
     description: "Transaction amount (₹100.00) exceeds mandate single transaction cap (₹1.00).",
     agent: "demo_policy_agent",
     amount: "₹100.00",
-    details: "Policy engine detects cap violation. Decision = BLOCK. Structural gate stops execution before RazorpayX.",
+    details: "Policy engine detects cap violation. Decision = DENY. Structural gate stops execution before RazorpayX.",
   },
   {
     id: "3",
-    name: "Scenario 3 — Behavioral Anomaly Flag",
+    name: "Scenario 3 — Behavioral Anomaly Review",
     badge: "RISK ENGINE",
     expected: "REVIEW",
     description: "Cold-start agent attempting large uncharacteristic payment (₹4,500.00) to new payee.",
     agent: "demo_behavior_agent",
     amount: "₹4,500.00",
-    details: "Isolation Forest scores anomaly = 0.68 >= 0.42. Decision = FLAG. RazorpayX execution is blocked.",
+    details: "Isolation Forest scores anomaly = 0.68 >= 0.42. Decision = REVIEW. RazorpayX execution is blocked.",
   },
   {
     id: "4",
-    name: "Scenario 4 — Untrusted Provenance Flag",
+    name: "Scenario 4 — Untrusted Provenance Deny",
     badge: "PROVENANCE",
-    expected: "REVIEW",
+    expected: "DENY",
     description: "Payment intent originated from untrusted external content (e.g. scraped email).",
     agent: "demo_provenance_agent",
     amount: "₹1,000.00",
-    details: "Provenance evaluator detects UNTRUSTED source. Decision = FLAG. RazorpayX execution is blocked.",
+    details: "Provenance evaluator detects UNTRUSTED source. Decision = DENY. RazorpayX execution is blocked.",
   },
   {
-    id: "5",
-    name: "Scenario 5 — Idempotent Replay",
+    id: "6",
+    name: "Scenario 6 — Idempotent Replay",
     badge: "IDEMPOTENCY",
     expected: "IDEMPOTENT_REPLAY",
     description: "Repeat the exact same payment request with an identical idempotency key.",
@@ -68,14 +68,14 @@ const SCENARIOS: ScenarioCardMeta[] = [
     details: "Idempotency store returns cached completion payload without creating a duplicate payout.",
   },
   {
-    id: "6",
-    name: "Scenario 6 — Revoked Mandate Block",
+    id: "7",
+    name: "Scenario 7 — Revoked Mandate Deny",
     badge: "AUTHORITY",
     expected: "DENY",
     description: "Attempt payment request after agent mandate has been explicitly revoked.",
     agent: "demo_revocation_agent",
     amount: "₹100.00",
-    details: "Policy engine detects REVOKED mandate status. Decision = BLOCK. RazorpayX execution is blocked.",
+    details: "Policy engine detects REVOKED mandate status. Decision = DENY. RazorpayX execution is blocked.",
   },
 ];
 
@@ -224,6 +224,8 @@ export default function DemoPage() {
                             ? "border-green-500 text-green-600 bg-[#FDFBF7]"
                             : res.actual_decision === "REVIEW"
                             ? "border-amber-500 text-amber-600 bg-[#FDFBF7]"
+                            : res.actual_decision === "IDEMPOTENT_REPLAY"
+                            ? "border-blue-500 text-blue-600 bg-[#FDFBF7]"
                             : "border-red-500 text-red-600 bg-[#FDFBF7]"
                         }`}
                       >
@@ -233,6 +235,8 @@ export default function DemoPage() {
                               ? "bg-green-600 border-green-700"
                               : res.actual_decision === "REVIEW"
                               ? "bg-amber-600 border-amber-700"
+                              : res.actual_decision === "IDEMPOTENT_REPLAY"
+                              ? "bg-blue-600 border-blue-700"
                               : "bg-red-600 border-red-700"
                           }`}
                         />
