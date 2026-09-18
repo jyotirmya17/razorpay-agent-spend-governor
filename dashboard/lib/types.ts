@@ -223,6 +223,7 @@ export interface DemoScenarioResult {
   reason_codes: string[];
   execution_status: string;
   razorpay_payout_id?: string | null;
+  anomaly_score?: number | null;
   audit_events_created?: number;
   audit_events_count?: number;
   execution_occurred: boolean;
