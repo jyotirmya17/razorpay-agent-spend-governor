@@ -244,8 +244,17 @@ export default function DemoPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-black/60">Match Expected:</span>
+                  {res.reason_codes && res.reason_codes.length > 0 && (
+                    <div className="flex items-center justify-between border-b-2 border-black pb-3 border-dashed mt-3">
+                      <span className="text-black/60">Reason Codes:</span>
+                      <span className="font-mono text-xs text-black/80 font-bold bg-black/5 px-2 py-1">
+                        {res.reason_codes.join(", ")}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between border-b-2 border-black pb-3 border-dashed mt-3">
+                    <span className="text-black/60">Match Expected:</span>
                       <span className={res.matched_expected ? "text-green-500" : "text-red-500"}>
                         {res.matched_expected ? "✓ MATCHED" : "✕ MISMATCHED"}
                       </span>
