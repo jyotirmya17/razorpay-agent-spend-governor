@@ -17,16 +17,16 @@ Wiring:
        |
   make_risk_decision    (Phase 4.5 + 4.7 provenance aggregation)
        |
-  +-- BLOCK / FLAG  --> stop (structural; ExecutionService never called)
+  +-- DENY / REVIEW  --> stop (structural; ExecutionService never called)
   |
   +-- ALLOW         --> ExecutionService.execute_spend (existing Phase 3)
 
 Decision precedence (enforced in make_risk_decision):
-  1. Policy violation             -> BLOCK
-  2. Model failure (None/NaN/inf) -> FLAG
-  3. Behavioral block (disabled)  -> N/A
-  4. Behavioral flag (>= 0.42)    -> FLAG
-  5. Provenance risk (untrusted)  -> FLAG
+  1. Policy violation             -> DENY
+  2. Model failure (None/NaN/inf) -> REVIEW
+  3. Behavioral DENY (disabled)  -> N/A
+  4. Behavioral REVIEW (>= 0.42)    -> REVIEW
+  5. Provenance risk (untrusted)  -> REVIEW
   6. Otherwise                   -> ALLOW
 
 Audit events are written to the DB BEFORE execution.
@@ -158,7 +158,7 @@ def orchestrate_payout(
     """
     Full risk evaluation pipeline. Returns (risk_result, execution_result).
 
-    BLOCK / FLAG: execution_result is None. RazorpayX is never called.
+    DENY / REVIEW: execution_result is None. RazorpayX is never called.
     ALLOW: execution_result contains the execution outcome.
 
     Audit events are written before any Razorpay call. The audit-chain lock
@@ -196,10 +196,10 @@ def orchestrate_payout(
             result = model.predict_one(features)
             anomaly_score = result["anomaly_score"]
             model_version = result["model_version"]
-        # If model is not fitted: anomaly_score stays None -> FLAG via fail-safe
+        # If model is not fitted: anomaly_score stays None -> REVIEW via fail-safe
     except Exception as e:
         logger.error(f"Behavioral evaluation error for {txn_id}: {e}")
-        # anomaly_score stays None -> decision engine will FLAG via fail-safe
+        # anomaly_score stays None -> decision engine will REVIEW via fail-safe
 
     # --- Audit: behavior evaluated ---
     append_audit_event(db, "governor.behavior_evaluated", txn_id, {
@@ -212,7 +212,7 @@ def orchestrate_payout(
     # --- Provenance evaluation ---
     provenance_reasons = evaluate_provenance(request.provenance)
 
-    # Ensure Transaction record exists (even for policy-blocked requests)
+    # Ensure Transaction record exists (even for policy-DENIED requests)
     txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
     if not txn:
         txn = Transaction(
@@ -221,7 +221,7 @@ def orchestrate_payout(
             payee_id=request.payee_id,
             category=request.category,
             amount=request.amount,
-            status="BLOCKED" if not policy_allowed else "UNKNOWN",
+            status="DENIED" if not policy_allowed else "UNKNOWN",
         )
         db.add(txn)
         db.flush()
@@ -280,9 +280,9 @@ def orchestrate_payout(
     })
     db.commit()  # Audit is committed before any Razorpay call
 
-    # --- Structural gate: BLOCK/FLAG never reach ExecutionService ---
+    # --- Structural gate: DENY/REVIEW never reach ExecutionService ---
     if decision in ("DENY", "REVIEW"):
-        # Mark transaction as BLOCKED or FLAGGED
+        # Mark transaction as DENIED or FLAGGED
         txn = db.query(Transaction).filter_by(txn_id=txn_id).first()
         if txn:
             txn.status = decision

@@ -101,16 +101,16 @@ def test_policy_violation_precedence_with_nan_score():
 def test_boundary_values():
     config = RiskConfig(flag_threshold=0.5, block_threshold=0.9, behavioral_blocking_enabled=True)
     
-    # Exactly flag threshold -> FLAG
+    # Exactly REVIEW threshold -> REVIEW
     result = make_risk_decision(True, "AUTHORIZED", 0.5, "v1", config)
     assert result["decision"] == "REVIEW"
     assert "BEHAVIOR_REVIEW_REQUIRED" in result["reason_codes"]
     
-    # Just below flag threshold -> ALLOW
+    # Just below REVIEW threshold -> ALLOW
     result2 = make_risk_decision(True, "AUTHORIZED", 0.499, "v1", config)
     assert result2["decision"] == "ALLOW"
     
-    # Exactly block threshold -> BLOCK
+    # Exactly DENY threshold -> DENY
     result3 = make_risk_decision(True, "AUTHORIZED", 0.9, "v1", config)
     assert result3["decision"] == "DENY"
     assert "BEHAVIOR_HIGH_RISK" in result3["reason_codes"]

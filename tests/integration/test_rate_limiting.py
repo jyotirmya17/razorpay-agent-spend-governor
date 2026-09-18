@@ -3,7 +3,10 @@ from gateway.main import app
 
 client = TestClient(app)
 
+from gateway.models.db import init_db
+
 def test_rate_limiting():
+    init_db()
     from gateway.api.routes import limiter
     limiter.enabled = True
     try:

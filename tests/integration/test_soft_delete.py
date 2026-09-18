@@ -1,13 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
 from gateway.main import app
-from gateway.models.db import SessionLocal, Agent
+from gateway.models.db import SessionLocal, Agent, init_db
 from gateway.config import get_config
 
 client = TestClient(app)
 
 def test_soft_delete_agent():
     # Setup: Create an agent manually
+    init_db()
     db = SessionLocal()
     agent = Agent(agent_id="test_soft_delete_agent", name="Test Agent", status="ACTIVE", is_active=True)
     db.merge(agent)

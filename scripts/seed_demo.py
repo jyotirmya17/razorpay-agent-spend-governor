@@ -3,10 +3,10 @@ seed_demo.py — Deterministic demo fixture seeder for Phase 4.7.
 
 Agents seeded (demo-only; do NOT use in production):
   procurement-agent      — active mandate, normal transaction history
-  finance-agent      — active mandate with a very low txn_cap (triggers BLOCK)
+  finance-agent      — active mandate with a very low txn_cap (triggers DENY)
   marketing-agent    — active mandate, no transaction history (cold-start -> high anomaly)
   support-agent  — active mandate, no provenance supplied in request
-  support-agent  — mandate will be revoked to demonstrate BLOCK on revocation
+  support-agent  — mandate will be revoked to demonstrate DENY on revocation
 
 All amounts and IDs are synthetic.
 No real Razorpay payout IDs are fabricated here.

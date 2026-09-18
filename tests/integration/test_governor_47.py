@@ -5,10 +5,10 @@ All tests use an in-memory SQLite DB (via override_get_db) and mock
 RazorpayXClient so that no real Razorpay calls are made during pytest.
 
 Decision precedence verified:
-  1. Policy BLOCK -> never reaches ExecutionService
-  2. Model failure -> FLAG, never ALLOW
-  3. Behavioral FLAG -> never reaches ExecutionService
-  4. Provenance FLAG -> never reaches ExecutionService
+  1. Policy DENY -> never reaches ExecutionService
+  2. Model failure -> REVIEW, never ALLOW
+  3. Behavioral REVIEW -> never reaches ExecutionService
+  4. Provenance REVIEW -> never reaches ExecutionService
   5. ALLOW -> ExecutionService called exactly once
 """
 import json
@@ -144,10 +144,10 @@ def test_normal_allow(client, db_session):
     assert body["status"] == "SUCCEEDED"
 
 
-# ─── 2. Policy BLOCK ─────────────────────────────────────────────────────────
+# ─── 2. Policy DENY ─────────────────────────────────────────────────────────
 
 def test_policy_block_does_not_call_razorpay(client, db_session):
-    """Amount exceeds txn_cap -> BLOCK. RazorpayX must not be called."""
+    """Amount exceeds txn_cap -> DENY. RazorpayX must not be called."""
     with patch("execution.service.RazorpayXClient") as MockClient:
         resp = client.post("/v1/payouts", json=payout_body(
             "agt_policy", "idemp_policy_001", amount=10_000,  # cap is 50
@@ -160,10 +160,10 @@ def test_policy_block_does_not_call_razorpay(client, db_session):
     assert "AMOUNT_EXCEEDS_TXN_CAP" in body["reason_codes"]
 
 
-# ─── 3. Behavioral FLAG ───────────────────────────────────────────────────────
+# ─── 3. Behavioral REVIEW ───────────────────────────────────────────────────────
 
 def test_behavioral_flag_does_not_call_razorpay(client, db_session):
-    """High anomaly score -> FLAG. RazorpayX must not be called."""
+    """High anomaly score -> REVIEW. RazorpayX must not be called."""
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_model:
         mock_m = MagicMock()
         mock_m.is_fitted = True
@@ -182,7 +182,7 @@ def test_behavioral_flag_does_not_call_razorpay(client, db_session):
     assert "BEHAVIOR_REVIEW_REQUIRED" in body["reason_codes"]
 
 
-# ─── 4. Provenance FLAG ───────────────────────────────────────────────────────
+# ─── 4. Provenance REVIEW ───────────────────────────────────────────────────────
 
 def test_provenance_deny_does_not_call_razorpay(client, db_session):
     """UNTRUSTED external content provenance -> DENY even when behavior is low risk."""
@@ -204,7 +204,7 @@ def test_provenance_deny_does_not_call_razorpay(client, db_session):
     assert "PROVENANCE_UNTRUSTED_SOURCE" in body["reason_codes"]
 
 
-# ─── 5. Missing provenance -> UNKNOWN -> FLAG ─────────────────────────────────
+# ─── 5. Missing provenance -> UNKNOWN -> REVIEW ─────────────────────────────────
 
 def test_missing_provenance_defaults_to_unknown_deny(client, db_session):
     """No provenance field in request -> defaults to UNKNOWN -> DENY. Never TRUSTED."""
@@ -280,7 +280,7 @@ def test_idempotency_conflict(client, db_session):
 # ─── 8. Mandate Revocation ────────────────────────────────────────────────────
 
 def test_mandate_revocation(client, db_session):
-    """Revoke mandate between requests -> second request BLOCK."""
+    """Revoke mandate between requests -> second request DENY."""
     provenance = {"source_type": "TRUSTED_TASK", "source_id": "t1", "source_trust": "TRUSTED", "payment_intent_origin": "AGENT_TOOL"}
 
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_model:
@@ -314,10 +314,10 @@ def test_mandate_revocation(client, db_session):
     assert r2.json()["decision"] == "DENY"
 
 
-# ─── 9. Model Failure -> FLAG (never ALLOW) ───────────────────────────────────
+# ─── 9. Model Failure -> REVIEW (never ALLOW) ───────────────────────────────────
 
 def test_model_failure_flags(client, db_session):
-    """Behavioral model raising an exception -> FLAG with BEHAVIOR_EVALUATION_FAILED."""
+    """Behavioral model raising an exception -> REVIEW with BEHAVIOR_EVALUATION_FAILED."""
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_model:
         mock_model.side_effect = RuntimeError("model error")
 
@@ -506,7 +506,7 @@ def test_concurrent_audit_append_sqlite(db_session):
 # ─── 15. Aggregate reason codes (behavior + provenance) ──────────────────────
 
 def test_behavioral_and_provenance_reasons_aggregated(client, db_session):
-    """High anomaly + untrusted provenance -> FLAG with BOTH reason codes."""
+    """High anomaly + untrusted provenance -> REVIEW with BOTH reason codes."""
     with patch("gateway.risk.orchestrator.get_or_train_model") as mock_model:
         mock_m = MagicMock()
         mock_m.is_fitted = True

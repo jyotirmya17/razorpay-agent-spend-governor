@@ -29,7 +29,7 @@ class BehavioralAnomalyModel:
     - deterministic with fixed random_state
     
     This model strictly outputs a behavioral anomaly risk score.
-    It does NOT make ALLOW/FLAG/BLOCK decisions, and it is NOT a fraud detection system by itself.
+    It does NOT make ALLOW/REVIEW/DENY decisions, and it is NOT a fraud detection system by itself.
     anomaly_score is a behavioral risk score, not a calibrated probability.
     """
     

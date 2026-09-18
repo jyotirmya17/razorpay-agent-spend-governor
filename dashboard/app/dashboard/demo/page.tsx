@@ -23,7 +23,7 @@ const SCENARIOS: ScenarioCardMeta[] = [
     badge: "HAPPY PATH",
     expected: "ALLOW",
     description: "Valid agent payout request within daily/weekly cap, allowed category & normal behavior.",
-    agent: "demo_normal_agent",
+    agent: "procurement-agent",
     amount: "₹100.00",
     details: "Runs through full Governor pipeline. Decision = ALLOW. Reaches RazorpayX Test Mode execution.",
   },
@@ -32,9 +32,9 @@ const SCENARIOS: ScenarioCardMeta[] = [
     name: "Scenario 2 — Policy Violation Deny",
     badge: "POLICY GATE",
     expected: "DENY",
-    description: "Transaction amount (₹100.00) exceeds mandate single transaction cap (₹1.00).",
-    agent: "demo_policy_agent",
-    amount: "₹100.00",
+    description: "Transaction amount (₹150,000.00) exceeds mandate single transaction cap.",
+    agent: "finance-agent",
+    amount: "₹150,000.00",
     details: "Policy engine detects cap violation. Decision = DENY. Structural gate stops execution before RazorpayX.",
   },
   {
@@ -43,19 +43,29 @@ const SCENARIOS: ScenarioCardMeta[] = [
     badge: "RISK ENGINE",
     expected: "REVIEW",
     description: "Cold-start agent attempting large uncharacteristic payment (₹4,500.00) to new payee.",
-    agent: "demo_behavior_agent",
+    agent: "marketing-agent",
     amount: "₹4,500.00",
-    details: "Isolation Forest scores anomaly = 0.68 >= 0.42. Decision = REVIEW. RazorpayX execution is blocked.",
+    details: "Isolation Forest scores anomaly high. Decision = REVIEW. RazorpayX execution is blocked.",
   },
   {
     id: "4",
-    name: "Scenario 4 — Untrusted Provenance Deny",
+    name: "Scenario 4 — Prompt Injection / Malicious Intent",
     badge: "PROVENANCE",
     expected: "DENY",
-    description: "Payment intent originated from untrusted external content (e.g. scraped email).",
-    agent: "demo_provenance_agent",
-    amount: "₹1,000.00",
+    description: "Payment intent originated from untrusted external content (e.g. prompt injection in email).",
+    agent: "support-agent",
+    amount: "₹5,000.00",
     details: "Provenance evaluator detects UNTRUSTED source. Decision = DENY. RazorpayX execution is blocked.",
+  },
+  {
+    id: "5",
+    name: "Scenario 5 — Untrusted Beneficiary",
+    badge: "RISK ENGINE",
+    expected: "REVIEW",
+    description: "Payment to a new/untrusted beneficiary.",
+    agent: "finance-agent",
+    amount: "₹500.00",
+    details: "Beneficiary risk is high. Decision = REVIEW. RazorpayX execution is blocked.",
   },
   {
     id: "6",
@@ -63,8 +73,8 @@ const SCENARIOS: ScenarioCardMeta[] = [
     badge: "IDEMPOTENCY",
     expected: "IDEMPOTENT_REPLAY",
     description: "Repeat the exact same payment request with an identical idempotency key.",
-    agent: "demo_normal_agent",
-    amount: "₹100.00",
+    agent: "marketing-agent",
+    amount: "₹250.00",
     details: "Idempotency store returns cached completion payload without creating a duplicate payout.",
   },
   {
@@ -73,9 +83,19 @@ const SCENARIOS: ScenarioCardMeta[] = [
     badge: "AUTHORITY",
     expected: "DENY",
     description: "Attempt payment request after agent mandate has been explicitly revoked.",
-    agent: "demo_revocation_agent",
+    agent: "support-agent",
     amount: "₹100.00",
     details: "Policy engine detects REVOKED mandate status. Decision = DENY. RazorpayX execution is blocked.",
+  },
+  {
+    id: "8",
+    name: "Scenario 8 — Velocity Cap Exceeded",
+    badge: "POLICY GATE",
+    expected: "DENY",
+    description: "Agent has exceeded its weekly limit.",
+    agent: "marketing-agent",
+    amount: "₹30,000.00",
+    details: "Policy engine detects velocity violation. Decision = DENY. RazorpayX execution is blocked.",
   },
 ];
 
@@ -249,6 +269,19 @@ export default function DemoPage() {
                       <span className="text-black/60">Reason Codes:</span>
                       <span className="font-mono text-xs text-black/80 font-bold bg-black/5 px-2 py-1">
                         {res.reason_codes.join(", ")}
+                      </span>
+                    </div>
+                  )}
+
+                  {res.anomaly_score !== undefined && res.anomaly_score !== null && (
+                    <div className="flex items-center justify-between border-b-2 border-black pb-3 border-dashed mt-3">
+                      <span className="text-black/60">Anomaly Score:</span>
+                      <span className={`font-mono text-xs font-bold px-2 py-1 border-2 ${
+                        res.anomaly_score >= 0.42 
+                          ? "border-red-500 text-red-600 bg-[#FDFBF7]" 
+                          : "border-green-500 text-green-600 bg-[#FDFBF7]"
+                      }`}>
+                        {res.anomaly_score.toFixed(3)}
                       </span>
                     </div>
                   )}

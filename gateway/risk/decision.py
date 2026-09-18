@@ -21,23 +21,23 @@ def make_risk_decision(
     Combined Risk Decision Engine — Phase 4.7.
 
     Decision precedence (strictly ordered):
-      1. Policy violation          -> BLOCK  (authoritative; cannot be overridden)
-      2. Model failure             -> FLAG   (fail-safe; never ALLOW)
-      3. Behavioral block (if enabled) -> BLOCK
-      4. Behavioral flag           -> FLAG
-      5. Provenance risk           -> FLAG   (aggregated with any behavioral reasons)
+      1. Policy violation          -> DENY  (authoritative; cannot be overridden)
+      2. Model failure             -> REVIEW   (fail-safe; never ALLOW)
+      3. Behavioral DENY (if enabled) -> DENY
+      4. Behavioral REVIEW           -> REVIEW
+      5. Provenance risk           -> REVIEW   (aggregated with any behavioral reasons)
       6. Otherwise                 -> ALLOW
 
     Reason codes from behavioral and provenance evaluation are always aggregated.
-    Multiple FLAG conditions all contribute their reason codes.
-    Policy BLOCK is never downgraded by low behavioral/provenance risk.
+    Multiple REVIEW conditions all contribute their reason codes.
+    Policy DENY is never downgraded by low behavioral/provenance risk.
     """
     now = datetime.now(timezone.utc).isoformat()
     provenance_reasons = provenance_reasons or []
 
     reasons: List[str] = [policy_reason]
 
-    # 1. Deterministic Policy Violation -> BLOCK (cannot be downgraded)
+    # 1. Deterministic Policy Violation -> DENY (cannot be downgraded)
     if not policy_allowed:
         return {
             "decision": "DENY",
@@ -75,7 +75,7 @@ def make_risk_decision(
             "timestamp": now,
         }
 
-    # 3. Behavioral Block (only if explicitly enabled and block_threshold set)
+    # 3. Behavioral DENY (only if explicitly enabled and block_threshold set)
     if config.behavioral_blocking_enabled and config.block_threshold is not None:
         if anomaly_score >= config.block_threshold:
             reasons.append("BEHAVIOR_HIGH_RISK")
@@ -89,7 +89,7 @@ def make_risk_decision(
                 "timestamp": now,
             }
 
-    # 4. Behavioral Flag (blocking disabled, but above block threshold -> FLAG)
+    # 4. Behavioral REVIEW (DENYING disabled, but above DENY threshold -> REVIEW)
     if not config.behavioral_blocking_enabled and config.block_threshold is not None:
         if anomaly_score >= config.block_threshold:
             reasons.append("BEHAVIOR_HIGH_RISK")
@@ -103,7 +103,7 @@ def make_risk_decision(
                 "timestamp": now,
             }
 
-    # 5. Provenance risk -> DENY (authoritative over behavioral flag)
+    # 5. Provenance risk -> DENY (authoritative over behavioral REVIEW)
     if provenance_reasons:
         if anomaly_score >= config.flag_threshold:
             reasons.append("BEHAVIOR_REVIEW_REQUIRED")
@@ -119,7 +119,7 @@ def make_risk_decision(
             "timestamp": now,
         }
 
-    # 6. Behavioral Flag (above flag threshold)
+    # 6. Behavioral REVIEW (above REVIEW threshold)
     if anomaly_score >= config.flag_threshold:
         reasons.append("BEHAVIOR_REVIEW_REQUIRED")
         return {
