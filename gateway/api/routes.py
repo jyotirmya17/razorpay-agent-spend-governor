@@ -781,13 +781,6 @@ def run_demo_scenario(request: Request, scenario_id: str, db: Session = Depends(
       5: idempotent_replay     (IDEMPOTENT_REPLAY — repeated key)
       6: revoked_mandate       (BLOCK — mandate revoked)
     """
-    # Step 1: ensure demo fixtures are seeded
-    from scripts.seed_demo import seed
-    try:
-        seed()
-    except Exception as e:
-        logger.warning(f"Demo seed notice: {e}")
-
     import uuid
     now_str = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     unique_suffix = f"{now_str}_{uuid.uuid4().hex[:6]}"
