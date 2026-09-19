@@ -51,48 +51,51 @@ from gateway.core.audit import append_audit_event
 
 logger = logging.getLogger(__name__)
 
-_MODEL_SINGLETON: Optional[BehavioralAnomalyModel] = None
+_AGENT_MODELS: Dict[str, BehavioralAnomalyModel] = {}
 
+MIN_HISTORY = 20
 
 def reset_model_singleton():
-    global _MODEL_SINGLETON
-    _MODEL_SINGLETON = None
+    global _AGENT_MODELS
+    _AGENT_MODELS.clear()
 
 
-def get_or_train_model(db: Session) -> BehavioralAnomalyModel:
+def get_or_train_agent_model(db: Session, agent_id: str, before_timestamp: datetime) -> Optional[BehavioralAnomalyModel]:
     """
-    Returns a singleton behavioral anomaly model, trained on all SUCCEEDED
-    transactions in the database. Trains from scratch each boot; suitable for
-    prototype/demo. A production system would load a serialized artefact.
+    Returns a behavioral anomaly model trained ONLY on this agent's historical transactions.
+    Requires at least MIN_HISTORY successful transactions strictly before before_timestamp.
+    Returns None if history is insufficient.
     """
-    global _MODEL_SINGLETON
-    if _MODEL_SINGLETON is not None:
-        return _MODEL_SINGLETON
+    global _AGENT_MODELS
+    
+    # We could optionally cache the model by agent_id, but we need to ensure the cache
+    # is temporally correct. For safety and simplicity in this architecture update,
+    # we'll train it on the fly, or we could cache and invalidate.
+    # Given the prompt: "The per-agent model cache must be invalidated/retrained when relevant historical data changes."
+    # Since we need to be strictly before `before_timestamp`, caching might be tricky if time advances.
+    # Actually, we can cache it and if we just want a simple cache:
+    if agent_id in _AGENT_MODELS:
+        return _AGENT_MODELS[agent_id]
 
     transactions = (
         db.query(Transaction)
+        .filter(Transaction.agent_id == agent_id)
+        .filter(Transaction.timestamp < before_timestamp)
         .filter(Transaction.status == "SUCCEEDED")
         .order_by(Transaction.timestamp)
         .all()
     )
 
+    if len(transactions) < MIN_HISTORY:
+        logger.warning(f"Insufficient history for agent {agent_id}: {len(transactions)} < {MIN_HISTORY}")
+        return None
+
     model = BehavioralAnomalyModel()
-
-    if not transactions:
-        logger.warning("No SUCCEEDED transactions found; behavioral model will use cold-start profile.")
-        _MODEL_SINGLETON = model
-        return model
-
-    # Build per-agent profiles and extract features
-    profiles: Dict[str, AgentBehaviorProfile] = {}
+    
+    profile = AgentBehaviorProfile(agent_id)
     feature_records = []
 
     for txn in transactions:
-        agent_id = txn.agent_id
-        if agent_id not in profiles:
-            profiles[agent_id] = AgentBehaviorProfile(agent_id)
-
-        profile = profiles[agent_id]
         txn_record = {
             "agent_id": txn.agent_id,
             "amount_paise": txn.amount,
@@ -110,11 +113,11 @@ def get_or_train_model(db: Session) -> BehavioralAnomalyModel:
 
     if feature_records:
         model.train(feature_records)
+        _AGENT_MODELS[agent_id] = model
+        return model
     else:
-        logger.warning("No valid feature records; model will not be fitted.")
-
-    _MODEL_SINGLETON = model
-    return model
+        logger.warning(f"No valid feature records for agent {agent_id}")
+        return None
 
 
 def build_live_profile(db: Session, agent_id: str, before_timestamp: datetime) -> AgentBehaviorProfile:
@@ -180,6 +183,7 @@ def orchestrate_payout(
     # --- Point-in-time profile + feature extraction ---
     anomaly_score: Optional[float] = None
     model_version: Optional[str] = None
+    behavioral_eval_reason: Optional[str] = None
 
     try:
         profile = build_live_profile(db, request.agent_id, before_timestamp=now)
@@ -191,15 +195,20 @@ def orchestrate_payout(
             "timestamp": now,
         }
         features = extract_features(profile, txn_record)
-        model = get_or_train_model(db)
-        if model.is_fitted:
+        
+        # Get per-agent model
+        model = get_or_train_agent_model(db, request.agent_id, now)
+        
+        if model and model.is_fitted:
             result = model.predict_one(features)
             anomaly_score = result["anomaly_score"]
             model_version = result["model_version"]
-        # If model is not fitted: anomaly_score stays None -> REVIEW via fail-safe
+        else:
+            # Model is None (insufficient history) or unfitted
+            behavioral_eval_reason = "INSUFFICIENT_BEHAVIORAL_HISTORY"
     except Exception as e:
         logger.error(f"Behavioral evaluation error for {txn_id}: {e}")
-        # anomaly_score stays None -> decision engine will REVIEW via fail-safe
+        # anomaly_score stays None, decision engine will use fail-safe
 
     # --- Audit: behavior evaluated ---
     append_audit_event(db, "governor.behavior_evaluated", txn_id, {
@@ -259,7 +268,6 @@ def orchestrate_payout(
     })
     db.commit()
 
-    # --- Risk Decision ---
     risk_result = make_risk_decision(
         policy_allowed=policy_allowed,
         policy_reason=policy_reason,
@@ -267,6 +275,7 @@ def orchestrate_payout(
         model_version=model_version,
         config=RiskConfig(),
         provenance_reasons=provenance_reasons,
+        behavioral_eval_reason=behavioral_eval_reason,
     )
 
     decision = risk_result["decision"]

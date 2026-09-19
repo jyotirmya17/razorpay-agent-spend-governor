@@ -144,6 +144,7 @@ def seed_prod(dry_run=True):
                     existing_txn.timestamp = t_stamp
                     existing_txn.amount = amt
                     existing_txn.payee_id = payee
+                    existing_txn.agent_id = "procurement-agent"
             else:
                 txns_to_create += 1
                 if not dry_run:

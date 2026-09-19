@@ -37,15 +37,33 @@ def setup_realistic_baseline(db: Session):
         status="ACTIVE"
     ))
 
-    # Insert exactly 48 transactions with specific timestamps to test they aren't deleted
-    for d in range(48):
+    from gateway.config import get_config
+    import random
+    
+    demo_payee_id = get_config().demo_fund_account_id
+    rng = random.Random(42)
+
+    # Insert exactly 100 transactions with realistic variation
+    for d in range(100, 0, -1):
+        amt = 10000 + rng.randint(-200, 200)
+        days_ago = (d // 2) + 1  
+        business_hour = rng.randint(9, 17) 
+        minute = rng.randint(0, 59)
+        t_stamp = (now - timedelta(days=days_ago)).replace(
+            hour=business_hour, 
+            minute=minute, 
+            second=0, 
+            microsecond=0
+        )
+        payee = demo_payee_id if d % 2 == 0 else "ven_test_normal"
+
         db.add(Transaction(
-            txn_id=f"demo_normal_hist_{d+1}_test",
+            txn_id=f"demo_normal_hist_{d}",
             agent_id="procurement-agent",
-            payee_id="test_payee",
+            payee_id=payee,
             category="cloud",
-            amount=10000,
-            timestamp=now - timedelta(hours=30 + d),
+            amount=amt,
+            timestamp=t_stamp,
             status="SUCCEEDED",
             razorpay_payout_id=f"pout_{d}"
         ))
@@ -65,7 +83,7 @@ def test_scenario_does_not_mutate_baseline(db_session: Session):
     ).all()
     count_before = len(txns_before)
     
-    assert count_before == 48
+    assert count_before == 100
     
     # Store the exact timestamps and IDs to ensure they are unchanged
     state_before = {t.txn_id: t.timestamp for t in txns_before}
@@ -82,7 +100,7 @@ def test_scenario_does_not_mutate_baseline(db_session: Session):
     ).all()
     count_after = len(txns_after)
     
-    assert count_after == 48
+    assert count_after == 100
     
     state_after = {t.txn_id: t.timestamp for t in txns_after}
     
@@ -113,5 +131,5 @@ def test_scenario_1_anomaly_score(db_session: Session):
     
     score = data["anomaly_score"]
     assert score is not None
-    # We ensure it's not EXACTLY 0.660
-    assert abs(score - 0.660) > 0.01, f"Score should not be 0.660 exactly, got {score}"
+    # We ensure it evaluates as safe for the procurement-agent baseline
+    assert score < 0.42, f"Score should be below behavioral-review threshold (0.42), got {score}"

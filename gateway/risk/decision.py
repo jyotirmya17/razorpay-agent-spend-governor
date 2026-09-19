@@ -16,6 +16,7 @@ def make_risk_decision(
     model_version: Optional[str],
     config: RiskConfig = RiskConfig(),
     provenance_reasons: Optional[List[str]] = None,
+    behavioral_eval_reason: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Combined Risk Decision Engine — Phase 4.7.
@@ -52,7 +53,11 @@ def make_risk_decision(
 
     # 2. Invalid or missing behavioral score -> REVIEW (fail-safe; never ALLOW)
     if anomaly_score is None or not math.isfinite(anomaly_score) or anomaly_score < 0.0 or anomaly_score > 1.0:
-        reasons.append("BEHAVIOR_EVALUATION_FAILED")
+        if behavioral_eval_reason:
+            reasons.append(behavioral_eval_reason)
+        else:
+            reasons.append("BEHAVIOR_EVALUATION_FAILED")
+            
         reasons.extend(provenance_reasons)  # still aggregate provenance
         
         # Provenance risk alone -> DENY (overrides the REVIEW fail-safe)
